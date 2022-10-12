@@ -22,6 +22,7 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+require_once("classes/info_moofactory_notification.php");
 
 function test(){
     $number = rand(1, 999);
@@ -272,6 +273,7 @@ function local_moofactory_notification_extend_navigation_course($navigation, $co
                 }
             }
         }
+        $PAGE->requires->jquery();
         $PAGE->requires->js('/local/moofactory_notification/util.js');
         $PAGE->requires->js_init_code($js, true);
     }
@@ -461,34 +463,40 @@ function local_moofactory_notification_send_siteevents_notification(){
                                 if(!empty($notif)){
                                     foreach ($users as $user) {
                                         if(!is_siteadmin($user)){
-                                            $data = new stdClass();
-                                            $data->firstname = $user->firstname;
-                                            $data->lastname = $user->lastname;
-                                            $data->username = $user->username;
-                                            $data->usergroup = "";
-                                            $data->eventdate = date("d/m/Y à H:i", $event->timestart);
-                                            $data->eventname = $event->name;
-                                            $data->coursename = "";
-                                            $data->coursestartdate = "";
-                                            $data->courseenddate = "";
-                                            $data->courseenrolstartdate = "";
-                                            $data->courseenrolenddate = "";
-                                            $data->courseurl = "";
-                                            $data->activityname = "";
-                                            $data->lmsurl = $CFG->wwwroot;
-                                            $data->lmsname = $SITE->fullname;
-                                            $data->interval = "";
+                                            if(!$user->suspended){
+                                                $data = new stdClass();
+                                                $data->firstname = $user->firstname;
+                                                $data->lastname = $user->lastname;
+                                                $data->username = $user->username;
+                                                $data->usergroup = "";
+                                                $data->eventdate = date("d/m/Y à H:i", $event->timestart);
+                                                $data->eventname = $event->name;
+                                                $data->coursename = "";
+                                                $data->coursestartdate = "";
+                                                $data->courseenddate = "";
+                                                $data->courseenrolstartdate = "";
+                                                $data->courseenrolenddate = "";
+                                                $data->courseurl = "";
+                                                $data->activityname = "";
+                                                $data->lmsurl = $CFG->wwwroot;
+                                                $data->lmsname = $SITE->fullname;
+                                                $data->interval = "";
 
-                                            $msgbodyhtml = local_moofactory_notification_replace_variables($variables, $bodyhtml, $data);
+                                                $msgbodyhtml = local_moofactory_notification_replace_variables($variables, $bodyhtml, $data);
 
-                                            $msg = new stdClass();
-                                            $msg->subject = $notif->subject;
-                                            $msg->from = "moofactory";
-                                            $msg->bodytext = "";
-                                            $msg->bodyhtml = $msgbodyhtml;
+                                                $msg = new stdClass();
+                                                $msg->subject = $notif->subject;
+                                                $msg->from = "moofactory";
+                                                $msg->bodytext = "";
+                                                $msg->bodyhtml = $msgbodyhtml;
 
-                                            $ret = local_moofactory_notification_send_email($user, $msg, $courseid, 'siteevents_notification');
-                                            $nbnotif++;
+                                                $ret = local_moofactory_notification_send_email($user, $msg, $courseid, 'siteevents_notification');
+
+                                                $dateEnvoi = date("d/m/Y H:i:s", time());
+                                                mtrace("\n" . 'Envoyé le : ' . $dateEnvoi . ' à ' . $data->firstname . ' ' . $data->lastname . ' (Evènement le ' . $data->eventdate .")");
+                                                mtrace('Objet du mail : ' . $msg->subject);
+                                                $nbnotif++;
+                                            }
                                         }
                                     }
                                 }
@@ -529,7 +537,7 @@ function local_moofactory_notification_send_coursesenroll_notification(){
     $records = $DB->get_records_sql(
         $sql,
         array($previouscourseenrolltasktime, $time));
-        
+
     if(!empty($records)){
         foreach($records as $record){
             $courseid = $record->courseid;
@@ -539,6 +547,7 @@ function local_moofactory_notification_send_coursesenroll_notification(){
 
             // Si le user courant est bien inscrit au cours correspondant
             if($enrolled){
+                // S'il est actif
                 if($active){
                     $user = $DB->get_record('user', array('id'=>$userid));
                     // Activation des notifications
@@ -637,6 +646,7 @@ function local_moofactory_notification_send_coursesaccess_notification(){
                                 // Calcul de l'intervalle
                                 $courseaccesstime = local_moofactory_notification_getCustomfield($courseid, 'courseaccesstime', 'text');
                                 $interval = (int)$courseaccesstime * 60 * 60 * 24; // jours
+                                // $interval = (int)$courseaccesstime * 60 * 60; // heures pour tests
                                 // $interval = (int)$courseaccesstime * 60; // minutes pour tests
 
                                 // On envoie une notification si le délai de non accès a été atteint depuis la dernière fois que la tâche s'est exécutée
@@ -1006,7 +1016,7 @@ function local_moofactory_notification_get_user_enrolment_dates($courseid, $user
     return [$timestart, $timeend];
 }
 
-// Evènements de type cours
+// Evènements de type cours.
 function local_moofactory_notification_send_coursesevents_notification(){
     global $CFG, $DB, $SITE;
     
@@ -1014,17 +1024,17 @@ function local_moofactory_notification_send_coursesevents_notification(){
 
     // Nombre de notifications envoyées
     $nbnotif = 0;
-    // Activation des notifications
+    // Activation des notifications.
     $enabled = get_config('local_moofactory_notification', 'enabled');
-    // Activation évènements de type cours 
+    // Activation évènements de type cours.
     $coursesevents = get_config('local_moofactory_notification', 'coursesevents');
-    // Tableau des notification de type courseevent
+    // Tableau des notification de type courseevent.
     $courseeventsnotifications = $DB->get_records('local_mf_notification', array('type'=>'courseevent'), 'base DESC, name ASC');
 
-    // Maintenant
+    // Maintenant.
     $time = time();
 
-    // La dernière fois que la tâche s'est exécutée
+    // La dernière fois que la tâche s'est exécutée.
     $previouscourseeventstasktime = get_config('local_moofactory_notification', 'previouscourseeventstasktime');
     if(empty($previouscourseeventstasktime)){
         set_config('previouscourseeventstasktime', $time, 'local_moofactory_notification');
@@ -1034,14 +1044,14 @@ function local_moofactory_notification_send_coursesevents_notification(){
         set_config('previouscourseeventstasktime', $time, 'local_moofactory_notification');
     }
 
-    // si les notifications sont activées
+    // Si les notifications sont activées.
     if(!empty($enabled)){
-        // si les évènements de type cours sont activées
+        // Si les évènements de type cours sont activées.
         if(!empty($coursesevents)){
-            // Tous les évènements à venir
+            // Tous les évènements à venir.
             $events = calendar_get_legacy_events($previouscourseeventstasktime, 0, false, false, true, false, false);
 
-            // Pour les rendez-vous
+            // Pour les rendez-vous.
             $events2 = calendar_get_legacy_events($previouscourseeventstasktime, 0, false, false, 0, false, false);
 
             $events = array_merge($events, $events2);
@@ -1050,8 +1060,8 @@ function local_moofactory_notification_send_coursesevents_notification(){
                 if (!empty($event->courseid) && !empty($event->modulename )){
                     $courseid = $event->courseid;
                     $coursecontext = \context_course::instance($courseid);
-                    // 'moodle/course:isincompletionreports' - this capability is allowed to only students
-                    // Seulement les inscriptions actives
+                    // 'moodle/course:isincompletionreports' - this capability is allowed to only students.
+                    // Seulement les inscriptions actives.
                     $enrolledusers = get_enrolled_users($coursecontext, 'moodle/course:isincompletionreports', 0, 'u.*', null, 0, 0, true);
 
                     $instances = get_fast_modinfo($event->courseid, $event->userid)->get_instances_of($event->modulename);
@@ -1060,77 +1070,49 @@ function local_moofactory_notification_send_coursesevents_notification(){
 
                         $moduleid = $module->id;
                         $modulename = $module->name;
-                        // Visibilité du module
-                        $modulevisible = $module->visible;
 
-                        // echo("<br><pre>");
-                        // var_dump($courseid);
-                        // var_dump($modulename);
-                        // echo("</pre>");
+                        // Activation évènements au niveau du cours.
+                        $courseevents = local_moofactory_notification_getCustomfield($courseid, 'courseevents', 'checkbox');
 
-                        // Pour connaître les resctictions du module
-                        $moduleavailability = json_decode($module->availability);
-                        $restrictions = $moduleavailability->c;
-
-                        $daterestriction = false;
-                        $grouprestriction = false;
-
-                        // Restriction
-                        $modulecheckavailabilityname = 'modulecheckavailability_'.$courseid.'_'.$moduleid;
-                        $modulecheckavailabilityvalue = get_config('local_moofactory_notification', $modulecheckavailabilityname);
-                        // Date
-                        $modulecheckdateavailabilityname = 'modulecheckdateavailability_'.$courseid.'_'.$moduleid;
-                        $modulecheckdateavailabilityvalue = get_config('local_moofactory_notification', $modulecheckdateavailabilityname);
-                        // Groupe
-                        $modulecheckgroupavailabilityname = 'modulecheckgroupavailability_'.$courseid.'_'.$moduleid;
-                        $modulecheckgroupavailabilityvalue = get_config('local_moofactory_notification', $modulecheckgroupavailabilityname);
-
-                        // Si les notifications de l'activité n'ont jamais été paramétrées et enregistrées on prend les réglages du cours
-                        if($modulecheckavailabilityvalue === false){
+                        // Si les évènements sont activés au niveau du cours.
+                        if(!empty($courseevents)){
+                            // Restriction
                             $modulecheckavailabilityvalue = local_moofactory_notification_getCustomfield($courseid, 'courseeventscheckavailability', 'checkbox');
-                        }
-                        // Date
-                        if($modulecheckdateavailabilityvalue === false){
+                            // Date
                             $modulecheckdateavailabilityvalue = local_moofactory_notification_getCustomfield($courseid, 'courseeventscheckdateavailability', 'checkbox');
-                        }
-                        // Groupe
-                        if($modulecheckgroupavailabilityvalue === false){
+                            // Groupe
                             $modulecheckgroupavailabilityvalue = local_moofactory_notification_getCustomfield($courseid, 'courseeventscheckgroupavailability', 'checkbox');
                         }
-
-                        if(empty($modulecheckavailabilityvalue)){
-                            // On ne tient pas compte des restrictions
-                            $moduleavailable = true;
-                        }
+                        // Sinon on prend le paramétrage de l'activité.
                         else{
-                            // On tient compte des restrictions
-                            foreach($restrictions as $restriction){
-                                if($restriction->type == "date"){
-                                   $daterestriction = true;
-                                }
-                                if($restriction->type == "group"){
-                                   $grouprestriction = true;
-                                }
+                            // Restriction
+                            $modulecheckavailabilityname = 'modulecheckavailability_'.$courseid.'_'.$moduleid;
+                            $modulecheckavailabilityvalue = get_config('local_moofactory_notification', $modulecheckavailabilityname);
+                            // Date
+                            $modulecheckdateavailabilityname = 'modulecheckdateavailability_'.$courseid.'_'.$moduleid;
+                            $modulecheckdateavailabilityvalue = get_config('local_moofactory_notification', $modulecheckdateavailabilityname);
+                            // Groupe
+                            $modulecheckgroupavailabilityname = 'modulecheckgroupavailability_'.$courseid.'_'.$moduleid;
+                            $modulecheckgroupavailabilityvalue = get_config('local_moofactory_notification', $modulecheckgroupavailabilityname);
+
+                            // Si les notifications de l'activité n'ont jamais été paramétrées et enregistrées on prend les réglages du cours
+                            if($modulecheckavailabilityvalue === false){
+                                $modulecheckavailabilityvalue = local_moofactory_notification_getCustomfield($courseid, 'courseeventscheckavailability', 'checkbox');
                             }
-                            
-                            if(
-                                (!$daterestriction && !$grouprestriction) ||
-                                (!empty($modulecheckdateavailabilityvalue) && !$grouprestriction) ||
-                                (!$daterestriction && !empty($modulecheckgroupavailabilityvalue)) ||
-                                (!empty($modulecheckdateavailabilityvalue) && !empty($modulecheckgroupavailabilityvalue))
-                                ){
-                                $moduleavailable = true;
+                            // Date
+                            if($modulecheckdateavailabilityvalue === false){
+                                $modulecheckdateavailabilityvalue = local_moofactory_notification_getCustomfield($courseid, 'courseeventscheckdateavailability', 'checkbox');
                             }
-                            else{
-                                $moduleavailable = $module->available;
+                            // Groupe
+                            if($modulecheckgroupavailabilityvalue === false){
+                                $modulecheckgroupavailabilityvalue = local_moofactory_notification_getCustomfield($courseid, 'courseeventscheckgroupavailability', 'checkbox');
                             }
                         }
                     }
                 }
-                
+
                 // Pour l'évènement courant, on cherche les delais des trois rappels (cours ou activité)
                 // Evènements liés au cours $courseid  
-                $courseevents = local_moofactory_notification_getCustomfield($courseid, 'courseevents', 'checkbox');
                 if(!empty($courseevents)){
                     // Valeurs des rappels liés au cours $courseid
                     $delays = local_moofactory_notification_get_delays('course', $courseid);
@@ -1188,42 +1170,57 @@ function local_moofactory_notification_send_coursesevents_notification(){
                                     foreach ($enrolledusers as $user) {
                                         $instances = get_fast_modinfo($event->courseid, $user->id)->get_instances_of($event->modulename);
 
+                                        // echo($user->firstname." ".$user->lastname."<br>");
+                            
                                         if (array_key_exists($event->instance, $instances)) {
                                             $module = $instances[$event->instance];
                                         }
-                                        if(empty($modulecheckavailabilityvalue)){
-                                            // On ne tient pas compte des restrictions
-                                            $uservisible = true;
-                                        }
-                                        else{
-                                            // On tient compte des restrictions
-                                            foreach($restrictions as $restriction){
-                                                if($restriction->type == "date"){
-                                                $daterestriction = true;
+
+                                        $moduleavailable = true;
+
+                                        if(!empty($modulecheckavailabilityvalue) && !empty($module->availability)){
+                                            // On tient compte des restrictions s'il y en a.
+
+                                            // Get availability information.
+                                            $ci = new \core_availability\info_moofactory_notification($module);
+                                            $ci->set_modinfo($event->courseid, $user->id);
+
+                                            $tree = $ci->get_availability_tree();
+                                            list($innernot, $andoperator) = $tree->get_logic_flags(false);
+                                            $children = $tree->get_all_children('core_availability\condition');
+
+                                            // Il faut traiter chaque restriction pour en déduire la disponibilité du module.
+                                            foreach ($children as $index => $child) {
+                                                $childresult = $child->is_available($innernot, $ci, true, $user->id);
+                                                $type = preg_replace('~^availability_(.*?)\\\\condition$~', '$1', get_class($child));
+
+                                                if($type != "date" && $type != "group"){
+                                                    $moduleavailable &= $childresult;
                                                 }
-                                                if($restriction->type == "group"){
-                                                $grouprestriction = true;
+                                                elseif($type == "date"){
+                                                    if(!empty($modulecheckdateavailabilityvalue)){
+                                                        $moduleavailable &= true;
+                                                    }
+                                                    else{
+                                                        $moduleavailable &= $childresult;
+                                                    }
                                                 }
-                                            }
-                                            
-                                            if(
-                                                (!$daterestriction && !$grouprestriction) ||
-                                                (!empty($modulecheckdateavailabilityvalue) && !$grouprestriction) ||
-                                                (!$daterestriction && !empty($modulecheckgroupavailabilityvalue)) ||
-                                                (!empty($modulecheckdateavailabilityvalue) && !empty($modulecheckgroupavailabilityvalue))
-                                                ){
-                                                $uservisible = true;
-                                            }
-                                            else{
-                                                $uservisible = $module->uservisible;
+                                                elseif($type == "group"){
+                                                    if(!empty($modulecheckgroupavailabilityvalue)){
+                                                        $moduleavailable &= true;
+                                                    }
+                                                    else{
+                                                        $moduleavailable &= $childresult;
+                                                    }
+                                                }
                                             }
                                         }
 
-                                        // Pas de notification si l'activité est achevée
+                                        // Pas de notification si l'activité est achevée.
                                         $result = $DB->get_record('course_modules_completion', array('coursemoduleid' => $moduleid, 'userid' => $user->id), 'completionstate');
                                         $completionstate = $result->completionstate;
 
-                                        if(!is_siteadmin($user) && $modulevisible && $moduleavailable && $uservisible && !$completionstate){
+                                        if(!is_siteadmin($user) && $moduleavailable && !$completionstate){
                                             // Pour les activités rendez-vous, on tient compte du user concerné
                                             if($targetedevent->modulename != "scheduler" || $targetedevent->userid == $user->id){
                                                 $data = new stdClass();
@@ -1257,7 +1254,7 @@ function local_moofactory_notification_send_coursesevents_notification(){
                                                 $ret = local_moofactory_notification_send_email($user, $msg, $courseid, 'coursesevents_notification');
                                                 
                                                 $dateEnvoi = date("d/m/Y H:i:s", time());
-                                                mtrace("\n" . 'Envoyé le : ' . $dateEnvoi . ' à ' . $data->firstname . ' ' . $data->lastname . ' - Cours : ' . $data->coursename . ' - Activité : ' . $data->activityname . '(Evènement le ' . $data->eventdate .")");
+                                                mtrace("\n" . 'Envoyé le : ' . $dateEnvoi . ' à ' . $data->firstname . ' ' . $data->lastname . ' - Cours : ' . $data->coursename . ' - Activité : ' . $data->activityname . ' (Evènement le ' . $data->eventdate .")");
                                                 mtrace('Objet du mail : ' . $msg->subject);
                                                 $nbnotif++;
                                             }
@@ -1504,7 +1501,11 @@ function local_moofactory_notification_prepare_enrollments_email($user, $coursei
         $msg->bodytext = "";
         $msg->bodyhtml = $msgbodyhtml;
         $ret = local_moofactory_notification_send_email($user, $msg, $courseid, 'coursesenrollments_notification');
-    }
+        
+        $dateEnvoi = date("d/m/Y H:i:s", time());
+        mtrace("\n" . 'Envoyé le : ' . $dateEnvoi . ' à ' . $data->firstname . ' ' . $data->lastname . ' - Cours : ' . $data->coursename . ' - Date d\'inscription : ' . $data->courseenrolstartdate .")");
+        mtrace('Objet du mail : ' . $msg->subject);
+}
     else{
         mtrace("Pas d'envoi : la notification est inexistante.");
         throw new moodle_exception("Pas d'envoi : la notification est inexistante.");

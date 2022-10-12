@@ -27,11 +27,11 @@ require_once('lib.php');
 
 global $DB;
 
-
 echo $OUTPUT->header();
 echo $OUTPUT->heading("Page test", 2);
 echo("<pre>");
 
+echo(time()."<br>");
 var_dump(date("d/m/Y H:i:s", time()));
 
 // local_moofactory_notification_send_coursesevents_notification();
