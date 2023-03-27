@@ -1503,7 +1503,7 @@ function local_moofactory_notification_prepare_enrollments_email($user, $coursei
         $ret = local_moofactory_notification_send_email($user, $msg, $courseid, 'coursesenrollments_notification');
         
         $dateEnvoi = date("d/m/Y H:i:s", time());
-        mtrace("\n" . 'Envoyé le : ' . $dateEnvoi . ' à ' . $data->firstname . ' ' . $data->lastname . ' - Cours : ' . $data->coursename . ' - Date d\'inscription : ' . $data->courseenrolstartdate .")");
+        mtrace("\n" . 'Envoyé le : ' . $dateEnvoi . ' à ' . $data->firstname . ' ' . $data->lastname . ' - Cours : ' . $data->coursename . ' - Date d\'inscription : ' . $data->courseenrolstartdate);
         mtrace('Objet du mail : ' . $msg->subject);
 }
     else{
