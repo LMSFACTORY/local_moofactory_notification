@@ -801,6 +801,13 @@ function local_moofactory_notification_get_all_activities($courseid, $config = n
     foreach ($modinfo->instances as $module => $instances) {
         $modulename = get_string('pluginname', $module);
         foreach ($instances as $index => $cm) {
+            $cmurl = $cm->url;
+            if ($cmurl) {
+                $url= method_exists($cm->url, 'out') ? $cm->url->out() : '';
+            }
+            else{
+                $url = '';
+            }
             $activities[] = array (
                 'type'       => $module,
                 'modulename' => $modulename,
@@ -810,7 +817,7 @@ function local_moofactory_notification_get_all_activities($courseid, $config = n
                 'expected'   => $cm->completionexpected,
                 'section'    => $cm->sectionnum,
                 'position'   => array_search($cm->id, $sections[$cm->sectionnum]),
-                'url'        => method_exists($cm->url, 'out') ? $cm->url->out() : '',
+                'url'        => $url,
                 'context'    => $cm->context,
                 'icon'       => $cm->get_icon_url(),
                 'available'  => $cm->available,

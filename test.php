@@ -33,6 +33,7 @@ echo("<pre>");
 
 echo(time()."<br>");
 var_dump(date("d/m/Y H:i:s", time()));
+echo("<br><br>");
 
 // local_moofactory_notification_send_coursesevents_notification();
 // local_moofactory_notification_send_coursesenroll_notification();
