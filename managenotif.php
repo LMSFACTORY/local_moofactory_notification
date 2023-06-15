@@ -37,9 +37,9 @@ $id = optional_param('id', 0, PARAM_INT); // Id de la notification.
 $returnurl = new moodle_url($CFG->wwwroot . '/admin/category.php?category=moofactory_notification');
 
 if (!empty($id)) {
-    $mform = new managenotif_form(null, array('id' => $id), 'post', '', array(id => 'notificationsform'));
+    $mform = new managenotif_form(null, array('id' => $id), 'post', '', array('id' => 'notificationsform'));
 } else {
-    $mform = new managenotif_form(null, null, 'post', '', array(id => 'notificationsform'));
+    $mform = new managenotif_form(null, null, 'post', '', array('id' => 'notificationsform'));
 }
 
 if ($mform->is_cancelled()) {
