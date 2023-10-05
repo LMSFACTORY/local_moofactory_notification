@@ -39,17 +39,17 @@ class managenotif_form extends moodleform {
             $options[$record->id] = $record->name;
         }
         $select = $mform->addElement('select', 'selectnotifications', get_string('notifications', 'local_moofactory_notification'), $options, array('onchange' => 'javascript:document.getElementById(\'notificationsform\').submit();'));
-        if ($this->_customdata['id'] != "") {
-            $select->setSelected($this->_customdata['id']);
-        }
 
-        $record = $DB->get_record('local_mf_notification', array('id' => $this->_customdata['id']), 'base, type, name, subject, bodyhtml');
-
-        $duplicateurl = new moodle_url($CFG->wwwroot . '/local/moofactory_notification/duplicatenotif.php', array('id' => $this->_customdata['id']));
-        $deleteurl = new moodle_url($CFG->wwwroot . '/local/moofactory_notification/deletenotif.php', array('id' => $this->_customdata['id']));
         $addurl = new moodle_url($CFG->wwwroot . '/local/moofactory_notification/addnotif.php');
         $html = '<div class="form-group row"><div class="col-md-3">&nbsp;</div>';
-        if ($this->_customdata['id'] != "") {
+
+        if(!empty($this->_customdata)){
+            $select->setSelected($this->_customdata['id']);
+
+            $record = $DB->get_record('local_mf_notification', array('id' => $this->_customdata['id']), 'base, type, name, subject, bodyhtml');
+
+            $duplicateurl = new moodle_url($CFG->wwwroot . '/local/moofactory_notification/duplicatenotif.php', array('id' => $this->_customdata['id']));
+            $deleteurl = new moodle_url($CFG->wwwroot . '/local/moofactory_notification/deletenotif.php', array('id' => $this->_customdata['id']));
             if(empty($record->base)){
                 $html .= '<div class="col-md-2"><a href="'.$duplicateurl.'">';
                 $html .= $OUTPUT->pix_icon('t/copy', '');
@@ -80,8 +80,9 @@ class managenotif_form extends moodleform {
         $mform->addElement('html', $html);
 
         $mform->addElement('text', 'notificationname', get_string('name', 'local_moofactory_notification'), 'size="50"');
+        $mform->setType('notificationname', PARAM_RAW);
         $mform->addRule('notificationname', get_string('required', 'local_moofactory_notification'), 'required');
-
+        
         if(!is_null($record->base) && $record->base != 1){
             $typeoptions['siteevent'] = get_string('siteevents', 'local_moofactory_notification');
             $typeoptions['courseevent'] = get_string('coursesevents', 'local_moofactory_notification');
@@ -94,8 +95,9 @@ class managenotif_form extends moodleform {
             $mform->setType('notificationtype', PARAM_ALPHA);
             $mform->setDefault('notificationtype', $record->type);    
         }
-
+        
         $mform->addElement('text', 'notificationsubject', get_string('subject', 'local_moofactory_notification'), 'size="50"');
+        $mform->setType('notificationsubject', PARAM_RAW);
         $mform->addRule('notificationsubject', get_string('required', 'local_moofactory_notification'), 'required');
 
         $mform->addElement('editor', 'notificationbodyhtml', get_string('bodyhtml', 'local_moofactory_notification'), 'wrap="virtual" rows="20" cols="80"');
@@ -179,7 +181,7 @@ class managenotif_form extends moodleform {
     
         $mform->addElement('html', $html);
 
-        if ($this->_customdata['id'] != "") {
+        if(!empty($this->_customdata)){
             $mform->setDefault('notificationname', $record->name);
             $select->setSelected($record->type);
             $mform->setDefault('notificationsubject', $record->subject);

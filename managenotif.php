@@ -47,12 +47,13 @@ if ($mform->is_cancelled()) {
 } else if ($fromform = $mform->get_data()) {
     $typeinitial = $fromform->typeinitial;
     $type = $fromform->notificationtype;
-
+    
     // Les cours
     $sql = "SELECT id, fullname FROM {course} WHERE id <> 1";
     $courses = $DB->get_records_sql($sql, array());
-
+    
     // Changement de type de notification
+    $customfieldname = '';
     if($type <> $typeinitial){
         switch($typeinitial){
             case "courseenroll":
@@ -121,6 +122,7 @@ if ($mform->is_cancelled()) {
 
         // La nouvelle notification
         $records = $DB->get_records('local_mf_notification', array('type'=>$type), 'base DESC, name ASC');
+        $newnotif = 0;
         $index = 0;
         foreach($records as $record) {
             $index++;
@@ -155,6 +157,7 @@ if ($mform->is_cancelled()) {
         }
 
         // Position avant update
+        $indexbefore = 0;
         $records = $DB->get_records('local_mf_notification', array('type'=>$type), 'base DESC, name ASC');
         $index = 0;
         foreach($records as $record) {
@@ -163,7 +166,7 @@ if ($mform->is_cancelled()) {
                 $indexbefore = $index;
             }
         }
-
+        
         if (!empty($fromform->submitbutton)) {
             // Update de la notification.
             $data = new stdClass;
@@ -174,8 +177,9 @@ if ($mform->is_cancelled()) {
             $data->bodyhtml = $fromform->notificationbodyhtml['text'];
             $DB->update_record('local_mf_notification', $data);
         }
-
+        
         // Position après update
+        $indexafter = 0;
         $records = $DB->get_records('local_mf_notification', array('type'=>$type), 'base DESC, name ASC');
         $index = 0;
         foreach($records as $record) {

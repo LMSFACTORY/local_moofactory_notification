@@ -801,13 +801,6 @@ function local_moofactory_notification_get_all_activities($courseid, $config = n
     foreach ($modinfo->instances as $module => $instances) {
         $modulename = get_string('pluginname', $module);
         foreach ($instances as $index => $cm) {
-            $cmurl = $cm->url;
-            if ($cmurl) {
-                $url= method_exists($cm->url, 'out') ? $cm->url->out() : '';
-            }
-            else{
-                $url = '';
-            }
             $activities[] = array (
                 'type'       => $module,
                 'modulename' => $modulename,
@@ -817,7 +810,7 @@ function local_moofactory_notification_get_all_activities($courseid, $config = n
                 'expected'   => $cm->completionexpected,
                 'section'    => $cm->sectionnum,
                 'position'   => array_search($cm->id, $sections[$cm->sectionnum]),
-                'url'        => $url,
+                'url'        => method_exists($cm->url, 'out') ? $cm->url->out() : '',
                 'context'    => $cm->context,
                 'icon'       => $cm->get_icon_url(),
                 'available'  => $cm->available,
@@ -1299,7 +1292,13 @@ function local_moofactory_notification_getCustomfield($courseid, $name, $type){
     $record = $DB->get_record_sql(
         $sql,
         array($courseid, $name));
-    $value = $record->$fieldvalue;
+
+    if(!empty($record)){
+        $value = $record->$fieldvalue;
+    }
+    else{
+        $value = "0";
+    }
     return $value;
 }
 
@@ -1510,7 +1509,7 @@ function local_moofactory_notification_prepare_enrollments_email($user, $coursei
         $ret = local_moofactory_notification_send_email($user, $msg, $courseid, 'coursesenrollments_notification');
         
         $dateEnvoi = date("d/m/Y H:i:s", time());
-        mtrace("\n" . 'Envoyé le : ' . $dateEnvoi . ' à ' . $data->firstname . ' ' . $data->lastname . ' - Cours : ' . $data->coursename . ' - Date d\'inscription : ' . $data->courseenrolstartdate);
+        mtrace("\n" . 'Envoyé le : ' . $dateEnvoi . ' à ' . $data->firstname . ' ' . $data->lastname . ' - Cours : ' . $data->coursename . ' - Date d\'inscription : ' . $data->courseenrolstartdate .")");
         mtrace('Objet du mail : ' . $msg->subject);
 }
     else{
