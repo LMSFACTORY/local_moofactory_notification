@@ -24,6 +24,7 @@
 
 require_once("../../config.php");
 require_once('lib.php');
+require_once('../../user/externallib.php');
 
 global $DB;
 

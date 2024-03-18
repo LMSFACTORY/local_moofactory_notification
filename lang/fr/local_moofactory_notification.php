@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['pluginname'] = 'Moo Factory Notification';
+$string['pluginname'] = 'Moofactory Notification';
 $string['notifications_category'] = 'Notifications';
 $string['settings'] = 'Modifier les paramètres';
 $string['managenotif'] = 'Gestion des notifications';
