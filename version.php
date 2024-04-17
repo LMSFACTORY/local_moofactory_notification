@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component      = 'local_moofactory_notification';
-$plugin->version        = 2024031800;
-$plugin->release        = '4';
-$plugin->requires       = 2019111800; // 3.8
+$plugin->version        = 2024041600;
+$plugin->release        = '4.1';
+$plugin->requires       = 2022112800; // 4.1
 $plugin->maturity       = MATURITY_STABLE;

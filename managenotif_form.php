@@ -35,16 +35,16 @@ class managenotif_form extends moodleform {
         // Select des notifications.
         $records = $DB->get_records('local_mf_notification', null, 'base DESC, name ASC');
         $options[0] = get_string('choose', 'local_moofactory_notification');
-        foreach($records as $record) {
-            $options[$record->id] = $record->name;
+        foreach($records as $recordchoice) {
+            $options[$recordchoice->id] = $recordchoice->name;
         }
-        $select = $mform->addElement('select', 'selectnotifications', get_string('notifications', 'local_moofactory_notification'), $options, array('onchange' => 'javascript:document.getElementById(\'notificationsform\').submit();'));
+        $selectnotifications = $mform->addElement('select', 'selectnotifications', get_string('notifications', 'local_moofactory_notification'), $options, array('onchange' => 'javascript:document.getElementById(\'notificationsform\').submit();'));
 
         $addurl = new moodle_url($CFG->wwwroot . '/local/moofactory_notification/addnotif.php');
         $html = '<div class="form-group row"><div class="col-md-3">&nbsp;</div>';
 
         if(!empty($this->_customdata)){
-            $select->setSelected($this->_customdata['id']);
+            $selectnotifications->setSelected($this->_customdata['id']);
 
             $record = $DB->get_record('local_mf_notification', array('id' => $this->_customdata['id']), 'base, type, name, subject, bodyhtml');
 
@@ -183,7 +183,9 @@ class managenotif_form extends moodleform {
 
         if(!empty($this->_customdata)){
             $mform->setDefault('notificationname', $record->name);
-            $select->setSelected($record->type);
+            if(!is_null($select)){
+                $select->setSelected($record->type);
+            }
             $mform->setDefault('notificationsubject', $record->subject);
             //$mform->setDefault('notificationbodyhtml', $record->bodyhtml);
             $mform->setDefault('notificationbodyhtml', array('text' => $record->bodyhtml,'format' => FORMAT_HTML));
