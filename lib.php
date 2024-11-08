@@ -1049,15 +1049,16 @@ function local_moofactory_notification_send_coursesevents_notification(){
         // Si les évènements de type cours sont activées.
         if(!empty($coursesevents)){
             // Tous les évènements à venir.
-            $events = calendar_get_legacy_events($previouscourseeventstasktime, 0, false, false, true, false, false);
+            // $events = calendar_get_legacy_events($previouscourseeventstasktime, 0, false, false, true, false, false);
+            $eventssql = $DB->get_records_select('event', "timestart>=?", array($previouscourseeventstasktime));
 
             // Pour les rendez-vous.
             $events2 = calendar_get_legacy_events($previouscourseeventstasktime, 0, false, false, 0, false, false);
 
-            $events = array_merge($events, $events2);
+            $events = array_merge($eventssql, $events2);
 
             foreach($events as $event) {
-                if (!empty($event->courseid) && !empty($event->modulename )){
+                if (!empty($event->courseid) && !empty($event->modulename)){
                     $courseid = $event->courseid;
                     $coursecontext = \context_course::instance($courseid);
                     // 'moodle/course:isincompletionreports' - this capability is allowed to only students.
@@ -1129,12 +1130,14 @@ function local_moofactory_notification_send_coursesevents_notification(){
                 // Envoi des notifications si l'évènement est prévu à l'issue d'un des délais, au moment de la tâche courante.
                 if(!empty($delays)){
                     foreach($delays as $delay) {
-                        $targetedevents = calendar_get_legacy_events($previouscourseeventstasktime + $delay, $time + $delay, false, false, $courseid, false, false);
+                        // $targetedevents = calendar_get_legacy_events($previouscourseeventstasktime + $delay, $time + $delay, false, false, $courseid, false, false);
+                        $targeteventssql = $DB->get_records_select('event', "timestart>? AND timestart<=? AND courseid=?", array($previouscourseeventstasktime + $delay, $time + $delay, $courseid));
 
                         // Pour les rendez-vous
                         $targetedevents2 = calendar_get_legacy_events($previouscourseeventstasktime + $delay, $time + $delay, false, false, 0, false, false);
 
-                        $targetedevents = array_merge($targetedevents, $targetedevents2);
+                        // $targetedevents = array_merge($targetedevents, $targetedevents2);
+                        $targetedevents = array_merge($targeteventssql, $targetedevents2);
 
                         foreach($targetedevents as $targetedevent) {
                             if($targetedevent->id == $event->id){

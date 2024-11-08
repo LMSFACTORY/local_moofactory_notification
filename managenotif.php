@@ -47,7 +47,7 @@ if ($mform->is_cancelled()) {
 } else if ($fromform = $mform->get_data()) {
     $typeinitial = $fromform->typeinitial;
     $type = $fromform->notificationtype;
-    
+
     // Les cours
     $sql = "SELECT id, fullname FROM {course} WHERE id <> 1";
     $courses = $DB->get_records_sql($sql, array());

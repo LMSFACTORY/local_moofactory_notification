@@ -28,8 +28,12 @@ defined('MOODLE_INTERNAL') || die();
 $observers = [
     array(
         'eventname' => 'core\event\user_enrolment_created',
-        //'callback' => 'local_moofactory_observer::user_enrolment_created',
         'callback' => 'local_moofactory_notification_user_enrolment_created',
+        'includefile'   => '/local/moofactory_notification/lib.php',
+    ),
+    array(
+        'eventname' => '\local_moofactory_resetmod\event\user_enrolment_reactivated',
+        'callback'  => 'local_moofactory_notification_user_enrolment_created',
         'includefile'   => '/local/moofactory_notification/lib.php',
     ),
     array(
