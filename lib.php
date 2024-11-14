@@ -260,7 +260,7 @@ function local_moofactory_notification_extend_navigation_course($navigation, $co
                     $menuitem .= '</a>';
 
                     $js .= "gmenuitem = '$menuitem';";
-                    $js .= "$('.activity .dropdown-menu.dropdown-menu-right').each(function(index, element ){";
+                    $js .= "$('.activity .activity-actions .dropdown-menu.dropdown-menu-right').each(function(index, element ){";
                     $js .= "    $(element).parents().each(function(index, element){";
                     $js .= "        if($(element).attr('data-owner') != undefined){";
                     $js .= "            owner = $(element).attr('data-owner');";

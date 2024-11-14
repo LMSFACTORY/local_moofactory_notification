@@ -27,22 +27,22 @@ defined('MOODLE_INTERNAL') || die();
 $messageproviders = array (
     'siteevents_notification' => array(
         'defaults' => array(
-            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN + MESSAGE_DEFAULT_LOGGEDOFF
+            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED
         ),
     ),
     'coursesevents_notification' => array(
         'defaults' => array(
-            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN + MESSAGE_DEFAULT_LOGGEDOFF
+            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED
         ),
     ),
     'coursesaccess_notification' => array(
         'defaults' => array(
-            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN + MESSAGE_DEFAULT_LOGGEDOFF
+            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED
         ),
     ),
     'coursesenrollments_notification' => array(
         'defaults' => array(
-            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN + MESSAGE_DEFAULT_LOGGEDOFF
+            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED
         ),
     ),
 );
