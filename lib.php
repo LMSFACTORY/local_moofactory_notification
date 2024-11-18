@@ -246,7 +246,7 @@ function local_moofactory_notification_extend_navigation_course($navigation, $co
                     $moduleid = $activity["id"];
                     $moduleevents = get_config('local_moofactory_notification', 'moduleevents_'.$courseid.'_'.$moduleid.'');
                     if(!empty($moduleevents)){
-                        $js .= "$(\"[data-owner='#module-" . $moduleid . "']  .dropdown a.dropdown-toggle\").prepend('<span class=\"icon fa fa-envelope-o fa-fw\"></span>');";
+                        $js .= "$(\"[data-owner='#module-" . $moduleid . "']  .dropdown a.dropdown-toggle[data-toggle='dropdown']\").prepend('<span class=\"icon fa fa-envelope-o fa-fw\"></span>');";
                     }
                 }
 
