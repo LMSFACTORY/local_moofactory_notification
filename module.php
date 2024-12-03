@@ -28,6 +28,18 @@ require_once('module_form.php');
 $courseid = optional_param('courseid', 2, PARAM_INT); // Id du cours.
 $id = optional_param('id', 0, PARAM_INT); // Id de l'activité.
 
+$PAGE->set_url('/local/moofactory_notification/module.php', array('courseid' => $courseid, 'id' => $id));
+$context = context_course::instance($courseid);
+$PAGE->set_context($context);
+
+// Vérifier que l'utilisateur est connecté.
+require_login($courseid);
+
+// Empêcher l'accès pour les utilisateurs invités ou non connectés.
+if (isguestuser() || !isloggedin()) {
+    redirect(new moodle_url('/login/index.php'));
+}
+
 $returnurl = new moodle_url($CFG->wwwroot . '/course/view.php', array('id' => $courseid));
 $nexturl = new moodle_url($CFG->wwwroot . '/course/view.php', array('id' => $courseid));
 
@@ -99,7 +111,52 @@ if ($mform->is_cancelled()) {
         }
     }
 
+    /*********** form notification après levée des restrictions d’accès ************/
+    $name = 'modulelevee_'.$courseid.'_'.$id;
+    if(empty($fromform->$name)){
+        $value = "";
+    }
+    else{
+        $value = $fromform->$name;
+        if($value){
+            set_config($name . '_date', time(), 'local_moofactory_notification');
+        } else {
+            unset_config($name . '_date', 'local_moofactory_notification');
+        }
 
+    }
+    set_config($name, $value, 'local_moofactory_notification');
+
+    $name = 'moduleleveenotification_'.$courseid.'_'.$id;
+    $value = $fromform->$name;
+    set_config($name, $value, 'local_moofactory_notification');
+
+    $name = 'moduleleveedelai_'.$courseid.'_'.$id;
+    if(empty($fromform->$name)){
+        $value = "";
+    }
+    else{
+        $value = $fromform->$name;
+    }
+    set_config($name, $value, 'local_moofactory_notification');
+
+    $configvars = ['moduledaysbeforelevee1', 'modulehoursbeforelevee1', 'moduledaysbeforelevee2', 'modulehoursbeforelevee2', 'moduledaysbeforelevee3', 'modulehoursbeforelevee3'];
+    foreach($configvars as $configvar){
+        $name = $configvar.'_'.$courseid.'_'.$id;
+        // Si la valeur = '999', on reset avec les valeurs définies dans le cours
+        if($fromform->$name != '999'){
+            if($fromform->$name == ""){
+                $value = "";
+            }
+            else{
+                $value = $fromform->$name;
+            }
+            set_config($name, $value, 'local_moofactory_notification');
+        }
+        else{
+            unset_config($name, 'local_moofactory_notification');
+        }
+    }
     // Typically you finish up by redirecting to somewhere where the user
     // can see what they did.
     redirect($nexturl);

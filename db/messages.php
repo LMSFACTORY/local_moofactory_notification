@@ -45,4 +45,9 @@ $messageproviders = array (
             'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED
         ),
     ),
+    'levee_notification' => array(
+        'defaults' => array(
+            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED
+        ),
+    ),
 );

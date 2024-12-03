@@ -86,6 +86,19 @@ function xmldb_local_moofactory_notification_install() {
 
     $DB->insert_record('local_mf_notification', $record);
 
+    $html = "{{firstname}} {{lastname}}<br><br>";
+    $html .= "Vous êtes inscrit à la formation « \"{{coursename}}\" » dans la plateforme {{lmsname}}.<br>";
+    $html .= "L'activité \"{{activityname}}\" est maintenant disponible.";
+    $record = new stdClass();
+    $record->base = 1;
+    $record->type = "moduleaccess";
+    $record->name = "Notification levée de restriction";
+    $record->subject = "Levée de restriction de l'acivité";
+    $record->bodyhtml = $html;
+
+    $DB->insert_record('local_mf_notification', $record);
+
+
     // Création des champs personnalisés de cours dans la catégorie 'Notifications'.
     require_login();
 

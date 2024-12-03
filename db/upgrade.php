@@ -95,7 +95,43 @@ function xmldb_local_moofactory_notification_upgrade($oldversion) {
             $DB->insert_record('local_mf_notification', $record);
         }
     }
-    
+
+    if ($oldversion < 2024112700) {
+        $table = new xmldb_table('local_mf_modaccessnotif');
+
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('moduleid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('notificationtime', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('notificationnumber', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        // Créer la table si elle n'existe pas déjà.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        upgrade_plugin_savepoint(true, 2024112700, 'local', 'moofactory_notification');
+    }
+    if ($oldversion < 2024112800) {
+        // Notifications par défaut.
+        // Notification de levee de restriction.
+        $record = $DB->get_record('local_mf_notification', array('type'=>'moduleaccess', 'base'=>1));
+        if(empty($record)){
+            $html = "{{firstname}} {{lastname}}<br><br>";
+            $html .= "Vous êtes inscrit à la formation « \"{{coursename}}\" » dans la plateforme {{lmsname}}.<br>";
+            $html .= "L'activité \"{{activityname}}\" est maintenant disponible.";
+            $record = new stdClass();
+            $record->base = 1;
+            $record->type = "moduleaccess";
+            $record->name = "Notification levée de restriction";
+            $record->subject = "Levée de restriction de l'acivité";
+            $record->bodyhtml = $html;
+        
+            $DB->insert_record('local_mf_notification', $record);
+        }
+    }
 
     // Création des champs personnalisés de cours dans la catégorie 'Notifications'.
     $categoryid = $DB->get_field('customfield_category', 'id', array('name' => get_string('notifications_category', 'local_moofactory_notification')));

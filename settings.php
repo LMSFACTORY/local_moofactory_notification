@@ -173,6 +173,37 @@ foreach($records as $record) {
 $setting = new admin_setting_configselect($name, $title, $description, '', $options);
 $settings->add($setting);
 
+$name = 'local_moofactory_notification/sep4';
+$heading = ' ';
+$information = '';
+$setting = new admin_setting_heading($name, $heading, $information);
+$settings->add($setting);
+
+$name = 'local_moofactory_notification/modulesaccess';
+$title = get_string('moduleaccess', 'local_moofactory_notification');
+$description = get_string('moduleaccess_desc', 'local_moofactory_notification');
+$default = false;
+$setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
+$settings->add($setting);
+
+$name = 'local_moofactory_notification/modulesleveetime';
+$title = get_string('leveetime', 'local_moofactory_notification');
+$description = get_string('leveetime_desc', 'local_moofactory_notification');
+$default = 0;
+$setting = new admin_setting_configtext($name, $title, $description, $default, PARAM_INT, '3');
+$settings->add($setting);
+
+$name = 'local_moofactory_notification/modulesaccessnotification';
+$title = get_string('usednotification', 'local_moofactory_notification');
+$description = get_string('moduleaccessnotification_desc', 'local_moofactory_notification');
+$options = Array();
+$records = $DB->get_records('local_mf_notification', array('type'=>'moduleaccess'), 'base DESC, name ASC');
+foreach($records as $record) {
+    $options[$record->id] = $record->name;
+}
+$setting = new admin_setting_configselect($name, $title, $description, '', $options);
+$settings->add($setting);
+
 /*
 $name = 'local_moofactory_notification/sep4';
 $heading = ' ';
