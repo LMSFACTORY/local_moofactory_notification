@@ -143,19 +143,14 @@ if ($mform->is_cancelled()) {
     $configvars = ['moduledaysbeforelevee1', 'modulehoursbeforelevee1', 'moduledaysbeforelevee2', 'modulehoursbeforelevee2', 'moduledaysbeforelevee3', 'modulehoursbeforelevee3'];
     foreach($configvars as $configvar){
         $name = $configvar.'_'.$courseid.'_'.$id;
-        // Si la valeur = '999', on reset avec les valeurs définies dans le cours
-        if($fromform->$name != '999'){
-            if($fromform->$name == ""){
+
+            if(empty($fromform->$name)){
                 $value = "";
             }
             else{
                 $value = $fromform->$name;
             }
             set_config($name, $value, 'local_moofactory_notification');
-        }
-        else{
-            unset_config($name, 'local_moofactory_notification');
-        }
     }
     // Typically you finish up by redirecting to somewhere where the user
     // can see what they did.
