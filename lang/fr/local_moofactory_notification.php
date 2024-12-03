@@ -96,6 +96,7 @@ $string['sendsiteeventsnotifications'] = 'Envoi des notifications pour les évè
 $string['sendcourseseventsnotifications'] = 'Envoi des notifications pour les évènements de type cours';
 $string['sendcourseenrollmentsnotifications'] = 'Envoi des notifications lors des inscriptions aux cours';
 $string['sendcourseaccessnotifications'] = 'Envoi des notifications en cas de non accès aux cours depuis un certain de temps';
+$string['sendmoduleaccessnotifications'] = 'Envoi des notifications en cas de levé des restrictions d\'une activité';
 $string['choose'] = 'Choisir une notification';
 $string['notifications'] = 'Notifications';
 $string['duplicate'] = 'Dupliquer';
@@ -142,3 +143,26 @@ $string['copied'] = 'Copié';
 // Capabilities.
 $string['moofactory_notification:managenotifications']  = 'Gestion des notifications';
 $string['moofactory_notification:setnotifications']  = 'Réglage des notifications';
+
+
+//champs notification restriction d'accès
+$string['moduleaccesstitle'] = 'Notification après levée des restrictions d\'accès';
+$string['moduleaccess'] = 'levée des restrictions d\'accès';
+$string['moduleaccess_desc'] = 'Notification suite à la levée des restrictions d\'accès d\'une activité';
+$string['leveetime'] = 'Delai';
+$string['leveetime_desc'] = 'Délai avant l\'envoi de la notification (en minutes)';
+$string['moduleaccessnotification_desc'] = 'Choix du modèle de notification à utiliser pour les levées de restriction';
+
+$string['moduleleveetime_desc'] = 'minute(s) après la levée des restrictions';
+$string['daysbeforelevee1'] = 'Premier rappel';
+$string['daysbeforelevee1_desc'] = 'jour(s) après la levée des restrictions';
+$string['hoursbeforelevee1'] = 'et/ou';
+$string['hoursbeforelevee1_desc'] = 'heure(s) après la levée des restrictions';
+$string['daysbeforelevee2'] = 'Deuxième rappel';
+$string['daysbeforelevee2_desc'] = 'jour(s) après la levée des restrictions';
+$string['hoursbeforelevee2'] = 'et/ou';
+$string['hoursbeforelevee2_desc'] = 'heure(s) après la levée des restrictions';
+$string['daysbeforelevee3'] = 'Troisième rappel';
+$string['daysbeforelevee3_desc'] = 'jour(s) après la levée des restrictions';
+$string['hoursbeforelevee3'] = 'et/ou';
+$string['hoursbeforelevee3_desc'] = 'heure(s) après la levée des restrictions';

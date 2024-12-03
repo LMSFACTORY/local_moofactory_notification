@@ -88,6 +88,7 @@ class managenotif_form extends moodleform {
             $typeoptions['courseevent'] = get_string('coursesevents', 'local_moofactory_notification');
             $typeoptions['courseenroll'] = get_string('coursesenrollments', 'local_moofactory_notification');
             $typeoptions['courseaccess'] = get_string('coursesaccess', 'local_moofactory_notification');
+            $typeoptions['moduleaccess'] = get_string('moduleaccess', 'local_moofactory_notification');
             $select = $mform->addElement('select', 'notificationtype', get_string('type', 'local_moofactory_notification'), $typeoptions);
         }
         else{

@@ -96,6 +96,7 @@ $string['sendsiteeventsnotifications'] = 'Sending notifications for site events'
 $string['sendcourseseventsnotifications'] = 'Sending notifications for courses events';
 $string['sendcourseenrollmentsnotifications'] = 'Sending notifications for courses enrollments';
 $string['sendcourseaccessnotifications'] = 'Sending notifications in the event of non-access to courses for a certain time';
+$string['sendmoduleaccessnotifications'] = 'Sending notifications after lifting of access restrictions';
 $string['choose'] = 'Choose a notification';
 $string['notifications'] = 'Notifications';
 $string['duplicate'] = 'Duplicate';
@@ -142,3 +143,25 @@ $string['copied'] = 'Copied';
 // Capabilities.
 $string['moofactory_notification:managenotifications']  = 'Manage notifications';
 $string['moofactory_notification:setnotifications']  = 'Setting notifications';
+
+//champs notification restriction d'accès
+$string['moduleaccesstitle'] = 'Notification after lifting of access restrictions';
+$string['moduleaccess'] = 'lifting of access restrictions';
+$string['moduleaccess_desc'] = 'Notification after the lifting of access restrictions';
+$string['leveetime'] = 'Delay';
+$string['leveetime_desc'] = 'Delay before lifting of access restrictions (in minutes)';
+$string['moduleaccessnotification_desc'] = 'Choice of the notification to use for the lifting of access restrictions';
+
+$string['moduleleveetime_desc'] = 'minute(s) after lifting of access restrictions';
+$string['daysbeforelevee1'] = 'First reminder';
+$string['daysbeforelevee1_desc'] = 'day(s) after lifting of access restrictions';
+$string['hoursbeforelevee1'] = 'and/or';
+$string['hoursbeforelevee1_desc'] = 'hour(s) after lifting of access restrictions';
+$string['daysbeforelevee2'] = 'Second reminder';
+$string['daysbeforelevee2_desc'] = 'day(s) after lifting of access restrictions';
+$string['hoursbeforelevee2'] = 'and/or';
+$string['hoursbeforelevee2_desc'] = 'hour(s) after lifting of access restrictions';
+$string['daysbeforelevee3'] = 'Third reminder';
+$string['daysbeforelevee3_desc'] = 'day(s) after lifting of access restrictions';
+$string['hoursbeforelevee3'] = 'and/or';
+$string['hoursbeforelevee3_desc'] = 'hour(s) after lifting of access restrictions';

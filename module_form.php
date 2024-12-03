@@ -154,7 +154,86 @@ class module_form extends moodleform {
         $mform->addElement('html', html_writer::end_tag('div'));
         $mform->addElement('html', '<br>');
 
+        /*********** form notification après levée des restrictions d’accès ************/
+        $mform->addElement('html', '<hr>');
+        $mform->addElement('html', '<h3>'. get_string('moduleaccesstitle', 'local_moofactory_notification') .'</h3>');
 
+        $moduleleveename = 'modulelevee_'.$courseid.'_'.$id;
+        $mform->addElement('checkbox', $moduleleveename, get_string('moduleaccess', 'local_moofactory_notification'));
+        $moduleleveevalue = get_config('local_moofactory_notification', $moduleleveename);
+        $mform->setDefault($moduleleveename, $moduleleveevalue);
+
+        $moduleleveenotificationname = 'moduleleveenotification_'.$courseid.'_'.$id;
+        $records = $DB->get_records('local_mf_notification', array('type'=>'moduleaccess'));
+
+        foreach($records as $record) {
+            $optionslevee[$record->id] = $record->name;
+        }
+        if(empty($moduleleveevalue)){
+            $mform->addElement('select', $moduleleveenotificationname, get_string('usednotification', 'local_moofactory_notification'), $optionslevee, array('disabled' => 'disabled'));
+        }
+        else{
+            $mform->addElement('select', $moduleleveenotificationname, get_string('usednotification', 'local_moofactory_notification'), $optionslevee);
+        }
+
+        $value = get_config('local_moofactory_notification', $moduleleveenotificationname);
+
+        if(!empty($value)){
+            $value--;
+            $courseleveenotifications = array_values($records);
+            $value = $courseleveenotifications[$value]->id;
+        }
+        $mform->setDefault($moduleleveenotificationname, $value);
+    
+
+        $nameleveedelay = 'moduleleveedelai_'.$courseid.'_'.$id;
+        if(empty($moduleleveevalue)){
+            $mform->addElement('text', $nameleveedelay, get_string('leveetime', 'local_moofactory_notification'), array('maxlength' => 3, 'size' => 3, 'disabled' => 'disabled'));
+        }
+        else {
+            $mform->addElement('text', $nameleveedelay, get_string('leveetime', 'local_moofactory_notification'), array('maxlength' => 3, 'size' => 3));
+        }
+
+        $mform->setType($nameleveedelay, PARAM_TEXT);
+        $leveedelayvalue = get_config('local_moofactory_notification', $nameleveedelay);
+        $mform->setDefault($nameleveedelay, $leveedelayvalue);
+
+        $mform->addElement('html', html_writer::start_tag('div', array('class' => 'form-group row fitem')));
+        $mform->addElement('html', html_writer::start_tag('div', array('class' => 'col-md-3')));
+        $mform->addElement('html', html_writer::end_tag('div'));
+        $mform->addElement('html', html_writer::start_tag('div', array('class' => 'col-md-9')));
+        $mform->addElement('html', get_string('moduleleveetime_desc', 'local_moofactory_notification'));
+        $mform->addElement('html', html_writer::end_tag('div'));
+        $mform->addElement('html', html_writer::end_tag('div'));
+        $mform->addElement('html', '<br>');
+
+        $configvarslevee = ['daysbeforelevee1', 'hoursbeforelevee1', 'daysbeforelevee2', 'hoursbeforelevee2', 'daysbeforelevee3', 'hoursbeforelevee3'];
+        foreach($configvarslevee as $configvar){
+            $name = 'module'.$configvar.'_'.$courseid.'_'.$id;
+            if(empty($moduleleveevalue)){
+                $mform->addElement('text', $name, get_string($configvar, 'local_moofactory_notification'), array('maxlength' => 3, 'size' => 3, 'disabled' => 'disabled'));
+            }
+            else{
+                $mform->addElement('text', $name, get_string($configvar, 'local_moofactory_notification'), array('maxlength' => 3, 'size' => 3));
+            }
+            $mform->setType($name, PARAM_TEXT);
+            
+            $value = get_config('local_moofactory_notification', $name);
+            if($value === false){
+                $value = local_moofactory_notification_getCustomfield($courseid, $configvar, 'text');
+            }
+            $mform->setDefault($name, $value);
+            $mform->addRule($name, get_string('notanumber', 'local_moofactory_notification'), 'numeric', null, 'client');
+            $mform->addElement('html', html_writer::start_tag('div', array('class' => 'form-group row fitem')));
+            $mform->addElement('html', html_writer::start_tag('div', array('class' => 'col-md-3')));
+            $mform->addElement('html', html_writer::end_tag('div'));
+            $mform->addElement('html', html_writer::start_tag('div', array('class' => 'col-md-9')));
+            $mform->addElement('html', get_string($configvar.'_desc', 'local_moofactory_notification'));
+            $mform->addElement('html', html_writer::end_tag('div'));
+            $mform->addElement('html', html_writer::end_tag('div'));
+            $mform->addElement('html', '<br>');
+        }
+        
         $this->add_action_buttons();
 
 
@@ -195,6 +274,27 @@ class module_form extends moodleform {
         $js .= "});";
 
         $js .= "initModuleCheckAvailability($('#id_$modulecheckavailabilityname').is(':checked'), '#id_$modulecheckdateavailabilityname', '#id_$modulecheckgroupavailabilityname');";
+
+        //js for levee restriction
+        $js .= "$('#id_$moduleleveename').change(function(){";
+        $js .= "    if($('#id_$moduleleveename').is(':checked')){";
+        $js .= "        $('#id_$nameleveedelay').removeAttr('disabled');";
+        $js .= "        $('#id_$moduleleveenotificationname').removeAttr('disabled');";
+        foreach($configvarslevee as $configvar){
+            $name = 'id_module'.$configvar.'_'.$courseid.'_'.$id;
+            $js .= "        $('#$name').removeAttr('disabled');";
+        }
+        $js .= "    }";
+        $js .= "    else{";
+        $js .= "        $('#id_$nameleveedelay').attr('disabled', 'disabled');";
+        $js .= "        $('#id_$moduleleveenotificationname').attr('disabled', 'disabled');";
+            foreach($configvarslevee as $configvar){
+            $name = 'id_module'.$configvar.'_'.$courseid.'_'.$id;
+            $js .= "        $('#$name').attr('disabled', 'disabled');";
+        }
+        $js .= "    }";
+        $js .= "});";
+
 
         $PAGE->requires->js('/local/moofactory_notification/util.js');
         $PAGE->requires->js_init_code($js, true);
