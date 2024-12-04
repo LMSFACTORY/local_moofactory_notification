@@ -1650,7 +1650,10 @@ function local_moofactory_notification_fetch_variables($html)
 function local_moofactory_notification_send_modulesaccess_notification()
 {
     global $DB;
-
+    
+    // Nombre de notifications envoyées
+    $nbnotif = 0;
+    
     $enabled = get_config('local_moofactory_notification', 'enabled');
     // Activation évènements de type cours.
     $moduleaccessnotif = get_config('local_moofactory_notification', 'modulesaccess');
@@ -1666,7 +1669,7 @@ function local_moofactory_notification_send_modulesaccess_notification()
     // Obtenir tous les modules avec des restrictions d'accès
     $sql = "SELECT cm.id, cm.course, cm.availability, cm.completion
             FROM {course_modules} cm
-            WHERE cm.deletioninprogress = 0 AND cm.availability IS NOT NULL";
+            WHERE cm.deletioninprogress = 0 AND cm.availability IS NOT NULL"; //and cm.id=522 for tests
     $modules = $DB->get_records_sql($sql);
 
     $time = time();
@@ -1730,17 +1733,19 @@ function local_moofactory_notification_send_modulesaccess_notification()
 
             $update_record = false;
             if (!empty($recordaccessnotif)) {
-                if ($recordaccessnotif->notificationnumber == 0 ) {
+                if ($recordaccessnotif->notificationnumber == 0) {
                     // 1ère notification sans délai
                     if (empty($moduleleveedelay)) {
                         // message sans délai
                         local_moofactory_notification_prepare_levee_email($user, $course->id, $leveenotifications, $cm);
+                        $nbnotif++;
                         $notificationnumber = 1;
                         $update_record = true;
                     }
                     // Gestion du délai si un délai est configuré
-                    elseif ($moduleleveedelay*60 + $recordaccessnotif->notificationtime <= $time) {
+                    elseif ($moduleleveedelay * 60 + $recordaccessnotif->notificationtime <= $time) {
                         local_moofactory_notification_prepare_levee_email($user, $course->id, $leveenotifications, $cm);
+                        $nbnotif++;
                         $notificationnumber = 1;
                         $update_record = true;
                     }
@@ -1752,18 +1757,21 @@ function local_moofactory_notification_send_modulesaccess_notification()
                         if ($notificationnumber == 1 && array_key_exists('first', $delays)) {
                             if ($recordaccessnotif->notificationtime + $delays['first'] <= $time) {
                                 local_moofactory_notification_prepare_levee_email($user, $course->id, $leveenotifications, $cm);
+                                $nbnotif++;
                                 $notificationnumber = 2;
                                 $update_record = true;
                             }
                         } elseif ($notificationnumber == 2 && array_key_exists('second', $delays)) {
                             if ($recordaccessnotif->notificationtime + $delays['second'] <= $time) {
                                 local_moofactory_notification_prepare_levee_email($user, $course->id, $leveenotifications, $cm);
+                                $nbnotif++;
                                 $notificationnumber = 3;
                                 $update_record = true;
                             }
                         } elseif ($notificationnumber == 3 && array_key_exists('third', $delays)) {
                             if ($recordaccessnotif->notificationtime + $delays['third'] <= $time) {
                                 local_moofactory_notification_prepare_levee_email($user, $course->id, $leveenotifications, $cm);
+                                $nbnotif++;
                                 $notificationnumber = 4;
                                 $update_record = true;
                             }
@@ -1784,6 +1792,7 @@ function local_moofactory_notification_send_modulesaccess_notification()
             }
         }
     }
+    mtrace("\n" . $nbnotif . ' notification(s) envoyée(s).' . "\n");
 }
 
 
