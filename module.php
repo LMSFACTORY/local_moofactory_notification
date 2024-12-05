@@ -28,13 +28,6 @@ require_once('module_form.php');
 $courseid = optional_param('courseid', 2, PARAM_INT); // Id du cours.
 $id = optional_param('id', 0, PARAM_INT); // Id de l'activité.
 
-$PAGE->set_url('/local/moofactory_notification/module.php', array('courseid' => $courseid, 'id' => $id));
-$context = context_course::instance($courseid);
-$PAGE->set_context($context);
-
-// Vérifier que l'utilisateur est connecté.
-require_login($courseid);
-
 // Empêcher l'accès pour les utilisateurs invités ou non connectés.
 if (isguestuser() || !isloggedin()) {
     redirect(new moodle_url('/login/index.php'));
