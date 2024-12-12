@@ -37,9 +37,9 @@ var_dump(date("d/m/Y H:i:s", time()));
 echo("<br><br>");
 
 // local_moofactory_notification_send_coursesevents_notification();
-// local_moofactory_notification_send_coursesenroll_notification();
+ local_moofactory_notification_send_coursesenroll_notification();
 // local_moofactory_notification_send_coursesaccess_notification();
 // local_moofactory_notification_send_siteevents_notification();
-//local_moofactory_notification_send_modulesaccess_notification();
+// local_moofactory_notification_send_modulesaccess_notification();
 echo("</pre>");
 echo $OUTPUT->footer();

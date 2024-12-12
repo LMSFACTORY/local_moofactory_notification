@@ -57,8 +57,8 @@ $observers = [
         'includefile'   => '/local/moofactory_notification/lib.php',
     ),
     array(
-        'eventname' => 'core\event\course_module_updated',
-        'callback' => 'local_moofactory_notification_module_updated',
+        'eventname' => 'core\event\course_module_deleted',
+        'callback' => 'local_moofactory_notification_module_deleted',
         'includefile'   => '/local/moofactory_notification/lib.php',
     ),
 ];

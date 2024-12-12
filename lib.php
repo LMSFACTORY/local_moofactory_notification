@@ -294,9 +294,9 @@ function local_moofactory_notification_user_enrolment_created($event): bool
     }
     $user = $DB->get_record('user', array('id' => $userid));
 
-
     // Le user a-t-il un statut actif ?
     $context = context_course::instance($courseid, IGNORE_MISSING);
+
     $is_enrolled = is_enrolled($context, $userid, '', true);
 
     if (!$is_enrolled) {
@@ -311,13 +311,10 @@ function local_moofactory_notification_user_enrolment_created($event): bool
         return false;
     }
 
-
     // Activation des notifications
     $enabled = get_config('local_moofactory_notification', 'enabled');
     // Activation des inscriptions aux cours
     $coursesenrollments = get_config('local_moofactory_notification', 'coursesenrollments');
-    // Tableau des notification de type courseenroll
-    $courseenrollmentsnotifications = $DB->get_records('local_mf_notification', array('type' => 'courseenroll'), 'base DESC, name ASC');
 
     // si les notifications sont activées
     if (!empty($enabled)) {
@@ -327,21 +324,14 @@ function local_moofactory_notification_user_enrolment_created($event): bool
             // si les notifications d'inscriptions au cours courant sont activées
             if (!empty($courseenrollments)) {
                 $courseenrollmentstime = local_moofactory_notification_getCustomfield($courseid, 'courseenrollmentstime', 'text');
-                // S'il n'y a pas de délai programmé, envoi immédiat
-                if (empty($courseenrollmentstime)) {
-                    // message
-                    local_moofactory_notification_prepare_enrollments_email($user, $courseid, $courseenrollmentsnotifications);
-                }
-                // Sinon, mise en liste d'attente dans la table 'local_mf_enrollnotif'
-                else {
-                    $notificationtime = $courseenrollmentstime * 60;
-                    $record = new stdclass();
-                    $record->userid = $userid;
-                    $record->courseid = $courseid;
-                    $record->notificationtime = $notificationtime + time();
 
-                    $id = $DB->insert_record('local_mf_enrollnotif', $record);
-                }
+                $notificationtime = empty($courseenrollmentstime) ? 10 : $courseenrollmentstime * 60;
+                $record = new stdclass();
+                $record->userid = $userid;
+                $record->courseid = $courseid;
+                $record->notificationtime = $notificationtime + time();
+
+                $id = $DB->insert_record('local_mf_enrollnotif', $record);
             }
         }
     }
@@ -359,12 +349,12 @@ function local_moofactory_notification_user_enrolment_updated($event): bool
     $is_enrolled = is_enrolled($coursecontext, $userid, 'moodle/course:isincompletionreports', true);
     if (empty($is_enrolled)) {
         // L'inscription de l'utilisateur n'est plus active...
-        // Il faut supprimer la ligne correspondante dans la table local_mf_accessnotif
+        // Il faut supprimer la ligne correspondante dans la table local_mf_accessnotif et local_mf_modaccessnotif
         $DB->delete_records('local_mf_accessnotif', array('userid' => $userid, 'courseid' => $courseid));
+        delete_mf_modaccessnotif_records($courseid,$userid);
     }
     return true;
 }
-
 function local_moofactory_notification_user_enrolment_deleted($event): bool
 {
     global $DB;
@@ -373,10 +363,30 @@ function local_moofactory_notification_user_enrolment_deleted($event): bool
     $userid = $event->relateduserid;
 
     // L'utilisateur désinscrit n'est plus dans le cours...
-    // Il faut supprimer la ligne correspondante dans la table local_mf_accessnotif et dans local_mf_enrollnotif
+    // Il faut supprimer la ligne correspondante dans la table local_mf_accessnotif, local_mf_modaccessnotif et local_mf_enrollnotif
     $DB->delete_records('local_mf_accessnotif', array('userid' => $userid, 'courseid' => $courseid));
     $DB->delete_records('local_mf_enrollnotif', array('userid' => $userid, 'courseid' => $courseid));
+    delete_mf_modaccessnotif_records($courseid,$userid);
+
     return true;
+}
+
+function delete_mf_modaccessnotif_records($courseid,$userid){
+    global $DB;
+    // Récupérer les moduleid du cours
+    $sql = "SELECT cm.id 
+        FROM {course_modules} cm
+        JOIN {modules} m ON cm.module = m.id
+        WHERE cm.course = :courseid";
+    $moduleids = $DB->get_fieldset_sql($sql, array('courseid' => $courseid));
+
+    if (!empty($moduleids)) {
+        list($insql, $params) = $DB->get_in_or_equal($moduleids, SQL_PARAMS_NAMED);
+        $params['userid'] = $userid;
+
+        // Suppression des enregistrements dans local_mf_modaccessnotif pour les modules du cours
+        $DB->delete_records_select('local_mf_modaccessnotif', "userid = :userid AND moduleid $insql", $params);
+    }
 }
 
 function local_moofactory_notification_course_viewed($event): bool
@@ -405,6 +415,16 @@ function local_moofactory_notification_course_updated($event): bool
         // Il faut supprimer les lignes correspondantes dans la table local_mf_accessnotif
         $DB->delete_records('local_mf_accessnotif', array('courseid' => $courseid));
     }
+    return true;
+}
+function local_moofactory_notification_module_deleted($event) {
+    global $DB;
+
+    $moduleid = $event->objectid; 
+
+    // Supprimez les données de notifs local_mf_modaccessnotif liées au module supprimé
+    $DB->delete_records('local_mf_modaccessnotif', array('moduleid' => $moduleid));
+
     return true;
 }
 
@@ -552,30 +572,34 @@ function local_moofactory_notification_send_coursesenroll_notification()
 
             // Si le user courant est bien inscrit au cours correspondant
             if ($enrolled) {
+
                 // S'il est actif
                 if ($active) {
-                    $user = $DB->get_record('user', array('id' => $userid));
-                    // Activation des notifications
-                    $enabled = get_config('local_moofactory_notification', 'enabled');
-                    // Activation des inscriptions aux cours
-                    $coursesenrollments = get_config('local_moofactory_notification', 'coursesenrollments');
-                    // Tableau des notification de type courseenroll
-                    $courseenrollmentsnotifications = $DB->get_records('local_mf_notification', array('type' => 'courseenroll'), 'base DESC, name ASC');
+                    $context = context_course::instance($courseid);
+                    if (has_capability('local/moofactory_notification:coursesenrollments', $context, $userid)) {
+                        $user = $DB->get_record('user', array('id' => $userid));
+                        // Activation des notifications
+                        $enabled = get_config('local_moofactory_notification', 'enabled');
+                        // Activation des inscriptions aux cours
+                        $coursesenrollments = get_config('local_moofactory_notification', 'coursesenrollments');
+                        // Tableau des notification de type courseenroll
+                        $courseenrollmentsnotifications = $DB->get_records('local_mf_notification', array('type' => 'courseenroll'), 'base DESC, name ASC');
 
-                    // Si les notifications sont activées
-                    if (!empty($enabled)) {
-                        // si les notifications d'inscriptions aux cours sont activées
-                        if (!empty($coursesenrollments)) {
-                            $courseenrollments = local_moofactory_notification_getCustomfield($courseid, 'courseenrollments', 'checkbox');
-                            // si les notifications d'inscriptions au cours courant sont activées
-                            if (!empty($courseenrollments)) {
-                                // message
-                                local_moofactory_notification_prepare_enrollments_email($user, $courseid, $courseenrollmentsnotifications);
-                                $nbnotif++;
+                        // Si les notifications sont activées
+                        if (!empty($enabled)) {
+                            // si les notifications d'inscriptions aux cours sont activées
+                            if (!empty($coursesenrollments)) {
+                                $courseenrollments = local_moofactory_notification_getCustomfield($courseid, 'courseenrollments', 'checkbox');
+                                // si les notifications d'inscriptions au cours courant sont activées
+                                if (!empty($courseenrollments)) {
+                                    // message
+                                    local_moofactory_notification_prepare_enrollments_email($user, $courseid, $courseenrollmentsnotifications);
+                                    $nbnotif++;
+                                }
                             }
                         }
                     }
-                    // Suppression de la ligne correspondant à l'envoi qui vient d'être effectué dans la table 'local_mf_enrollnotif'
+                    // Suppression de la ligne correspondant à l'envoi ou non(cas si le user n'a pas la capacité à recevoir) qui vient d'être effectué dans la table 'local_mf_enrollnotif'
                     $DB->delete_records('local_mf_enrollnotif', array('userid' => $userid, 'courseid' => $courseid, 'notificationtime' => $record->notificationtime));
                 }
                 // Update de notificationtime dans la table 'local_mf_enrollnotif' avec l'heure courante
@@ -646,9 +670,18 @@ function local_moofactory_notification_send_coursesaccess_notification()
                         if (!is_siteadmin($user)) {
                             $userid = $user->id;
 
+                            // Vérification de la capacité avant de continuer.
+                            if (!has_capability('local/moofactory_notification:coursesenrollments', $coursecontext, $userid)) {
+                                mtrace("Utilisateur {$userid} ignoré : capacité 'local/moofactory_notification:coursesenrollments' non satisfaite.");
+                                continue;
+                            }
+
                             $progress = local_moofactory_notification_get_progress($courseid, $userid);
+                            $completion = new completion_info($course);
+                            $is_complete = $completion->is_course_complete($userid);
+
                             // On envoie un notification uniquement si le cours n'est pas achevé
-                            if ($progress < 100) {
+                            if ($progress < 100 && !$is_complete) {
                                 // Calcul de l'intervalle
                                 $courseaccesstime = local_moofactory_notification_getCustomfield($courseid, 'courseaccesstime', 'text');
                                 $interval = (int)$courseaccesstime * 60 * 60 * 24; // jours
@@ -1075,7 +1108,7 @@ function local_moofactory_notification_send_coursesevents_notification()
             foreach ($events as $event) {
                 if (!empty($event->courseid) && !empty($event->modulename)) {
                     $courseid = $event->courseid;
-                    $coursecontext = \context_course::instance($courseid);
+
                     // 'moodle/course:isincompletionreports' - this capability is allowed to only students.
                     // Seulement les inscriptions actives.
                     $enrolledusers = get_enrolled_users($coursecontext, 'moodle/course:isincompletionreports', 0, 'u.*', null, 0, 0, true);
@@ -1183,6 +1216,14 @@ function local_moofactory_notification_send_coursesevents_notification()
 
                                 if (!empty($notif)) {
                                     foreach ($enrolledusers as $user) {
+
+                                        $coursecontext = \context_course::instance($event->courseid);
+
+                                        // Vérification de la capacité avant de continuer.
+                                        if (!has_capability('local/moofactory_notification:coursesenrollments', $coursecontext, $user->id)) {
+                                            mtrace("Utilisateur {$user->id} ignoré : capacité 'local/moofactory_notification:coursesenrollments' non satisfaite.");
+                                            continue;
+                                        }
                                         $instances = get_fast_modinfo($event->courseid, $user->id)->get_instances_of($event->modulename);
 
                                         // echo($user->firstname." ".$user->lastname."<br>");
@@ -1650,10 +1691,10 @@ function local_moofactory_notification_fetch_variables($html)
 function local_moofactory_notification_send_modulesaccess_notification()
 {
     global $DB;
-    
+
     // Nombre de notifications envoyées
     $nbnotif = 0;
-    
+
     $enabled = get_config('local_moofactory_notification', 'enabled');
     // Activation évènements de type cours.
     $moduleaccessnotif = get_config('local_moofactory_notification', 'modulesaccess');
@@ -1689,6 +1730,13 @@ function local_moofactory_notification_send_modulesaccess_notification()
         $context = \context_course::instance($course->id);
         $users = get_enrolled_users($context);
         foreach ($users as $user) {
+
+            // Vérification de la capacité avant de continuer.
+            if (!has_capability('local/moofactory_notification:coursesenrollments', $context, $user->id)) {
+                mtrace("Utilisateur {$user->id} ignoré : capacité 'local/moofactory_notification:coursesenrollments' non satisfaite.");
+                continue;
+            }
+
             // Vérifier si l'activité est visible pour cet utilisateur
             $modinfo = get_fast_modinfo($course, $user->id);
             $cm = $modinfo->get_cm($module->id);

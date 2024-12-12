@@ -36,5 +36,44 @@ $capabilities = array(
         'captype'              => 'write',
         'contextlevel'         => CONTEXT_SYSTEM
     ),
+    'local/moofactory_notification:coursesenrollments' => array(
+        'riskbitmask'          => RISK_CONFIG,
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => array(
+            'student' => CAP_ALLOW,
+            'teacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+        ),
+    ),
+    'local/moofactory_notification:coursesevents' => array(
+        'riskbitmask'          => RISK_CONFIG,
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => array(
+            'student' => CAP_ALLOW,
+            'teacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+        ),
+    ),
+    'local/moofactory_notification:coursesaccess' => array(
+        'riskbitmask'          => RISK_CONFIG,
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => array(
+            'student' => CAP_ALLOW,
+            'teacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+        ),
+    ),
+    'local/moofactory_notification:modulesaccess' => array(
+        'riskbitmask'          => RISK_CONFIG,
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => array(
+            'student' => CAP_ALLOW,
+            'teacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+        ),
+    ),
 );
-
