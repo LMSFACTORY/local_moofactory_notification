@@ -182,13 +182,7 @@ class module_form extends moodleform
 
         $value = get_config('local_moofactory_notification', $moduleleveenotificationname);
 
-        if (!empty($value)) {
-            $value--;
-            $courseleveenotifications = array_values($records);
-            $value = $courseleveenotifications[$value]->id;
-        }
         $mform->setDefault($moduleleveenotificationname, $value);
-
 
         $nameleveedelay = 'moduleleveedelai_' . $courseid . '_' . $id;
 
