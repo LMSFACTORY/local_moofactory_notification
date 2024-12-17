@@ -1108,7 +1108,7 @@ function local_moofactory_notification_send_coursesevents_notification()
             foreach ($events as $event) {
                 if (!empty($event->courseid) && !empty($event->modulename)) {
                     $courseid = $event->courseid;
-
+                    $coursecontext = \context_course::instance($courseid);
                     // 'moodle/course:isincompletionreports' - this capability is allowed to only students.
                     // Seulement les inscriptions actives.
                     $enrolledusers = get_enrolled_users($coursecontext, 'moodle/course:isincompletionreports', 0, 'u.*', null, 0, 0, true);
@@ -1216,8 +1216,6 @@ function local_moofactory_notification_send_coursesevents_notification()
 
                                 if (!empty($notif)) {
                                     foreach ($enrolledusers as $user) {
-
-                                        $coursecontext = \context_course::instance($event->courseid);
 
                                         // Vérification de la capacité avant de continuer.
                                         if (!has_capability('local/moofactory_notification:coursesenrollments', $coursecontext, $user->id)) {
