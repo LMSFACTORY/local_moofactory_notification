@@ -138,6 +138,8 @@ $string['params_interval'] = 'Time interval since last user access to course';
 $string['messageprovider:coursesaccess_notification'] = 'Notifications in the event of non-access to courses';
 $string['messageprovider:coursesenrollments_notification'] = 'Notifications for courses enrollments';
 $string['messageprovider:coursesevents_notification'] = 'Notifications for courses events';
+$string['messageprovider:siteevents_notification'] = 'Notifications for site events';
+$string['messageprovider:levee_notification'] = 'Notification after the lifting of access restrictions';
 $string['copied'] = 'Copied';
 
 // Capabilities.
