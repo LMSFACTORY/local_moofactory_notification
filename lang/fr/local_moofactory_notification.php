@@ -119,6 +119,8 @@ $string['nogroup'] = 'aucun groupe';
 $string['messageprovider:coursesaccess_notification'] = 'Notifications en cas de non accès aux cours';
 $string['messageprovider:coursesenrollments_notification'] = 'Notifications lors des inscriptions aux cours';
 $string['messageprovider:coursesevents_notification'] = 'Notifications pour les évènements de type cours';
+$string['messageprovider:siteevents_notification'] = 'Notifications pour les évènements de type site';
+$string['messageprovider:levee_notification'] = 'Notification suite à la levée des restrictions d\'accès d\'une activité';
 
 // Champs de fusion
 $string['params'] = 'Paramètres (champs de fusion)';
