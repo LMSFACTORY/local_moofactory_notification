@@ -23,6 +23,7 @@
  */
 
 require_once("classes/info_moofactory_notification.php");
+require_once($CFG->dirroot . '/course/format/moofactory/lib.php');
 
 function test()
 {
@@ -730,7 +731,7 @@ function local_moofactory_notification_send_coursesaccess_notification()
                                         $enrolments = local_moofactory_notification_get_user_enrolments($courseid, $userid);
                                         $times = array();
                                         foreach ($enrolments as $enrolment) {
-                                            $times[] = $enrolment->timestart;
+                                            $times[] = !empty($enrolment->timestart)?$enrolment->timestart:$enrolment->timecreated;
                                         }
                                         $timestart = min($times);
                                         $lastaccesstime = $timestart;
