@@ -25,7 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-function xmldb_local_moofactory_notification_install() {
+function xmldb_local_moofactory_notification_install()
+{
     global $DB;
 
     // Notifications par défaut.
@@ -34,7 +35,7 @@ function xmldb_local_moofactory_notification_install() {
     $html .= "Vous êtes inscrit à la formation « {{coursename}} » dans la plateforme {{lmsname}}.<br>";
     $html .= "Pour vous connecter : <a href=\"{{lmsurl}}\"\>{{lmsurl}}</a><br><br>";
     $html .= "Votre identifiant : {{username}}";
-  
+
     $record = new stdClass();
     $record->base = 1;
     $record->type = "courseenroll";
@@ -49,7 +50,7 @@ function xmldb_local_moofactory_notification_install() {
     $html .= "Vous êtes inscrit à la formation « \"<a href=\"{{courseurl}}\"\>{{coursename}}</a>\" » dans la plateforme {{lmsname}}.<br>";
     $html .= "Vous n’êtes pas venu dans ce cours depuis au moins {{interval}}. Rencontrez vous un problème ?<br>";
     $html .= "Nous vous invitons à vous reconnecter et à suivre votre formation.";
-  
+
     $record = new stdClass();
     $record->base = 1;
     $record->type = "courseaccess";
@@ -62,7 +63,7 @@ function xmldb_local_moofactory_notification_install() {
     // Evènement de site.
     $html = "{{firstname}} {{lastname}}<br><br>";
     $html .= "Le {{eventdate}}, {{eventname}} sur la plateforme « <a href=\"{{lmsurl}}\"\>{{lmsname}}</a> », n’oubliez pas d’inscrire cet évènement dans votre calendrier.";
-    
+
     $record = new stdClass();
     $record->base = 1;
     $record->type = "siteevent";
@@ -76,7 +77,7 @@ function xmldb_local_moofactory_notification_install() {
     $html = "{{firstname}} {{lastname}}<br><br>";
     $html .= "Le {{eventdate}}, un(e) {{eventname}} dans le cours « \"<a href=\"{{courseurl}}\"\>{{coursename}}</a>\" », n’oubliez pas de l’inscrire dans votre calendrier.<br><br>";
     $html .= "Nous comptons sur vous pour respecter cette échéance.";
-    
+
     $record = new stdClass();
     $record->base = 1;
     $record->type = "courseevent";
@@ -159,15 +160,15 @@ function xmldb_local_moofactory_notification_install() {
             print_error('nopermissionconfigure', 'core_customfield');
         }
 
-        $array = Array();
-        $records = $DB->get_records('local_mf_notification', array('type'=>'courseenroll'));
-        foreach($records as $record) {
+        $array = array();
+        $records = $DB->get_records('local_mf_notification', array('type' => 'courseenroll'));
+        foreach ($records as $record) {
             $array[] = $record->name;
         }
         $options = implode("\n", $array);
-        $record = $DB->get_record('local_mf_notification', array('id'=>get_config('local_moofactory_notification', 'coursesenrollmentsnotification')));
+        $record = $DB->get_record('local_mf_notification', array('id' => get_config('local_moofactory_notification', 'coursesenrollmentsnotification')));
         $defaultvalue = $record->name;
-        
+
         $data = new stdClass();
         $data->name = get_string('usednotification', 'local_moofactory_notification');
         $data->shortname = 'courseenrollmentsnotification';
@@ -224,6 +225,7 @@ function xmldb_local_moofactory_notification_install() {
         $handler->save_field_configuration($field, $data);
 
         // Select choix de la notification
+
         $type = "select";
         $field = \core_customfield\field_controller::create(0, (object)['type' => $type], $category);
 
@@ -232,19 +234,103 @@ function xmldb_local_moofactory_notification_install() {
             print_error('nopermissionconfigure', 'core_customfield');
         }
 
-        $array = Array();
-        $records = $DB->get_records('local_mf_notification', array('type'=>'courseaccess'));
-        foreach($records as $record) {
+        $array = array();
+        $records = $DB->get_records('local_mf_notification', array('type' => 'courseaccess'));
+        foreach ($records as $record) {
             $array[] = $record->name;
         }
         $options = implode("\n", $array);
-        $record = $DB->get_record('local_mf_notification', array('id'=>get_config('local_moofactory_notification', 'coursesaccessnotification')));
+        $record = $DB->get_record('local_mf_notification', array('id' => get_config('local_moofactory_notification', 'coursesaccessnotification')));
         $defaultvalue = $record->name;
-        
+
         $data = new stdClass();
         $data->name = get_string('usednotification', 'local_moofactory_notification');
         $data->shortname = 'courseaccessnotification';
         $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "defaultvalue" => $defaultvalue, "checkbydefault" => "0",  "locked" => "0",  "visibility" => "2");
+        $data->mform_isexpanded_id_header_specificsettings = 1;
+        $data->mform_isexpanded_id_course_handler_header = 1;
+        $data->categoryid = $categoryid;
+        $data->type = $type;
+        $data->id = 0;
+
+        $handler->save_field_configuration($field, $data);
+
+        // Select choix de la notification 2
+
+        $type = "select";
+        $field = \core_customfield\field_controller::create(0, (object)['type' => $type], $category);
+
+        $handler = $field->get_handler();
+        if (!$handler->can_configure()) {
+            print_error('nopermissionconfigure', 'core_customfield');
+        }
+
+        $array = array();
+        $records = $DB->get_records('local_mf_notification', array('type' => 'courseaccess'));
+        foreach ($records as $record) {
+            $array[] = $record->name;
+        }
+        $options = implode("\n", $array);
+        $record = $DB->get_record('local_mf_notification', array('id' => get_config('local_moofactory_notification', 'coursesaccessnotification')));
+        $defaultvalue = $record->name;
+
+        $data = new stdClass();
+        $data->name = get_string('usednotification2', 'local_moofactory_notification');
+        $data->shortname = 'courseaccessnotification2';
+        $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "defaultvalue" => $defaultvalue, "checkbydefault" => "0",  "locked" => "0",  "visibility" => "2");
+        $data->mform_isexpanded_id_header_specificsettings = 1;
+        $data->mform_isexpanded_id_course_handler_header = 1;
+        $data->categoryid = $categoryid;
+        $data->type = $type;
+        $data->id = 0;
+
+        $handler->save_field_configuration($field, $data);
+
+        //Select choix role notif 2
+
+        $type = "select";
+        $field = \core_customfield\field_controller::create(0, (object)['type' => $type], $category);
+
+        $handler = $field->get_handler();
+        if (!$handler->can_configure()) {
+            print_error('nopermissionconfigure', 'core_customfield');
+        }
+
+        $roles = $DB->get_records('role', null, '', 'id, shortname');
+        $rolenames = role_fix_names($roles);
+
+        $array = [];
+        foreach ($roles as $role) {
+            $array[] = $rolenames[$role->id]->localname ; 
+        }
+        $options = implode("\n", $array);
+
+        $data = new stdClass();
+        $data->name = get_string('selectrole2', 'local_moofactory_notification');
+        $data->shortname = 'courseaccessrole2';
+        $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "checkbydefault" => "0",  "locked" => "0",  "visibility" => "2");
+        $data->mform_isexpanded_id_header_specificsettings = 1;
+        $data->mform_isexpanded_id_course_handler_header = 1;
+        $data->categoryid = $categoryid;
+        $data->type = $type;
+        $data->id = 0;
+
+        $handler->save_field_configuration($field, $data);
+
+        // Champ 'Copie à'
+
+        $type = "text";
+        $field = \core_customfield\field_controller::create(0, (object)['type' => $type], $category);
+
+        $handler = $field->get_handler();
+        if (!$handler->can_configure()) {
+            print_error('nopermissionconfigure', 'core_customfield');
+        }
+
+        $data = new stdClass();
+        $data->name = get_string('copienotif', 'local_moofactory_notification');
+        $data->shortname = 'courseaccesscopie';
+        $data->configdata = array("required" => "0", "uniquevalues" => "0", "defaultvalue" => "", "maxlength" => 255, "locked" => "0",  "visibility" => "2");
         $data->mform_isexpanded_id_header_specificsettings = 1;
         $data->mform_isexpanded_id_course_handler_header = 1;
         $data->categoryid = $categoryid;
@@ -345,15 +431,15 @@ function xmldb_local_moofactory_notification_install() {
             print_error('nopermissionconfigure', 'core_customfield');
         }
 
-        $array = Array();
-        $records = $DB->get_records('local_mf_notification', array('type'=>'courseevent'));
-        foreach($records as $record) {
+        $array = array();
+        $records = $DB->get_records('local_mf_notification', array('type' => 'courseevent'));
+        foreach ($records as $record) {
             $array[] = $record->name;
         }
         $options = implode("\n", $array);
-        $record = $DB->get_record('local_mf_notification', array('id'=>get_config('local_moofactory_notification', 'courseseventsnotification')));
+        $record = $DB->get_record('local_mf_notification', array('id' => get_config('local_moofactory_notification', 'courseseventsnotification')));
         $defaultvalue = $record->name;
-        
+
         $data = new stdClass();
         $data->name = get_string('usednotification', 'local_moofactory_notification');
         $data->shortname = 'courseeventsnotification';
@@ -368,7 +454,7 @@ function xmldb_local_moofactory_notification_install() {
 
         // Champs rappels
         $configvars = ['daysbeforeevents1', 'hoursbeforeevents1', 'daysbeforeevents2', 'hoursbeforeevents2', 'daysbeforeevents3', 'hoursbeforeevents3'];
-        foreach($configvars as $configvar){
+        foreach ($configvars as $configvar) {
             $name = $configvar;
             $type = "text";
             $field = \core_customfield\field_controller::create(0, (object)['type' => $type], $category);
@@ -382,17 +468,16 @@ function xmldb_local_moofactory_notification_install() {
             $data->name = get_string($name, 'local_moofactory_notification');
             $data->shortname = $name;
             $data->configdata = array("required" => "0", "uniquevalues" => "0", "defaultvalue" => "", "displaysize" => 3, "maxlength" => 3, "ispassword" => "0", "link" => "",  "locked" => "0",  "visibility" => "2");
-            $data->description_editor = array("text" => get_string($name.'_desc', 'local_moofactory_notification'), "format" => "1", "itemid" => 123);
+            $data->description_editor = array("text" => get_string($name . '_desc', 'local_moofactory_notification'), "format" => "1", "itemid" => 123);
             $data->mform_isexpanded_id_header_specificsettings = 1;
             $data->mform_isexpanded_id_course_handler_header = 1;
             $data->categoryid = $categoryid;
             $data->type = $type;
             $data->id = 0;
-    
+
             $handler->save_field_configuration($field, $data);
         }
     }
 
     return true;
 }
-
