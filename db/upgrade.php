@@ -317,6 +317,101 @@ function xmldb_local_moofactory_notification_upgrade($oldversion) {
             $handler->move_field($field, $categoryid, $beforeid);
         }
 
+        // Select choix de la notification 2
+        $id = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseaccessnotification2'));
+        if(empty($id)){
+            $type = "select";
+            $field = \core_customfield\field_controller::create(0, (object)['type' => $type], $category);
+
+            $handler = $field->get_handler();
+            if (!$handler->can_configure()) {
+                print_error('nopermissionconfigure', 'core_customfield');
+            }
+
+            $array = Array();
+            $records = $DB->get_records('local_mf_notification', array('type'=>'courseaccess'));
+            foreach($records as $record) {
+                $array[] = $record->name;
+            }
+            $options = implode("\n", $array);
+            $record = $DB->get_record('local_mf_notification', array('id'=>get_config('local_moofactory_notification', 'coursesaccessnotification')));
+            $defaultvalue = $record->name;
+            
+            $data = new stdClass();
+            $data->name = get_string('usednotification2', 'local_moofactory_notification');
+            $data->shortname = 'courseaccessnotification2';
+            $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "defaultvalue" => $defaultvalue, "checkbydefault" => "0",  "locked" => "0",  "visibility" => "2");
+            $data->mform_isexpanded_id_header_specificsettings = 1;
+            $data->mform_isexpanded_id_course_handler_header = 1;
+            $data->categoryid = $categoryid;
+            $data->type = $type;
+            $data->id = 0;
+    
+            $handler->save_field_configuration($field, $data);
+            $handler->move_field($field, $categoryid, $beforeid);
+        }
+
+        //Select choix role notif 2
+        $id = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseaccessrole2'));
+        if(empty($id)){
+            $type = "select";
+            $field = \core_customfield\field_controller::create(0, (object)['type' => $type], $category);
+
+            $handler = $field->get_handler();
+            if (!$handler->can_configure()) {
+                print_error('nopermissionconfigure', 'core_customfield');
+            }
+
+            $roles = $DB->get_records('role', null, '', 'id, shortname');
+            $rolenames = role_fix_names($roles);
+
+            $array = [];
+            foreach ($roles as $role) {
+                $array[] = $rolenames[$role->id]->localname ; 
+            }
+            $options = implode("\n", $array);
+            
+            $data = new stdClass();
+            $data->name = get_string('selectrole2', 'local_moofactory_notification');
+            $data->shortname = 'courseaccessrole2';
+            $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "checkbydefault" => "0",  "locked" => "0",  "visibility" => "2");
+            $data->mform_isexpanded_id_header_specificsettings = 1;
+            $data->mform_isexpanded_id_course_handler_header = 1;
+            $data->categoryid = $categoryid;
+            $data->type = $type;
+            $data->id = 0;
+    
+            $handler->save_field_configuration($field, $data);
+            $handler->move_field($field, $categoryid, $beforeid);
+        }
+
+
+        // Champ 'Copie à'
+        $id = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseaccesscopie'));
+        if(empty($id)){
+            $type = "text";
+            $field = \core_customfield\field_controller::create(0, (object)['type' => $type], $category);
+
+            $handler = $field->get_handler();
+            if (!$handler->can_configure()) {
+                print_error('nopermissionconfigure', 'core_customfield');
+            }
+
+            $data = new stdClass();
+            $data->name = get_string('copienotif', 'local_moofactory_notification');
+            $data->shortname = 'courseaccesscopie';
+            $data->configdata = array("required" => "0", "uniquevalues" => "0", "defaultvalue" => "", "maxlength" => 255, "locked" => "0",  "visibility" => "2");
+            $data->mform_isexpanded_id_header_specificsettings = 1;
+            $data->mform_isexpanded_id_course_handler_header = 1;
+            $data->categoryid = $categoryid;
+            $data->type = $type;
+            $data->id = 0;
+            $handler->save_field_configuration($field, $data);
+            $handler->move_field($field, $categoryid, $beforeid);
+        }
+
+
+
         // Champ 'Evènements liés à ce cours'
         $id = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseevents'));
         if(empty($id)){

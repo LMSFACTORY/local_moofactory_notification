@@ -1459,15 +1459,35 @@ function local_moofactory_notification_prepare_access_email($user, $courseid, $c
 {
     global $DB, $CFG, $SITE;
 
-    $notifvalue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseaccessnotification', 'select');
-    if (!empty($notifvalue)) {
-        $courseaccessnotifications = array_values($courseaccessnotifications);
-        $notifvalue--;
-    } else {
-        $notifvalue = get_config('local_moofactory_notification', 'coursesaccessnotification');
+    // Récupération des champs personnalisés pour le cours
+    $defaultNotificationValue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseaccessnotification', 'select');
+    $roleSpecificNotificationValue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseaccessnotification2', 'select');
+    $roleToMatch = local_moofactory_notification_getCustomfield($courseid, 'courseaccessrole2', 'select');
+    $copiedEmails = local_moofactory_notification_getCustomfield($courseid, 'courseaccesscopie', 'text');
+
+    // Détermination de la notification à utiliser
+    $notifvalue = $defaultNotificationValue; // Valeur par défaut
+    if (!empty($roleToMatch) && !empty($roleSpecificNotificationValue)) {
+        $coursecontext = \context_course::instance($courseid);
+        $userRoles = get_user_roles($coursecontext, $user->id);
+        $roles = $DB->get_records('role', null, '', 'id, shortname');
+        $roles = array_values($roles);
+        foreach ($userRoles as $userRole) {
+            if ($userRole->shortname === $roles[$roleToMatch-1]->shortname) {
+                $notifvalue = $roleSpecificNotificationValue; // Si le rôle correspond, utiliser la notification spécifique
+                break;
+            }
+        }
+    }
+    $courseaccessnotifications = array_values($courseaccessnotifications);
+    // Validation de la notification sélectionnée
+    if (!isset($courseaccessnotifications[$notifvalue - 1])) {
+        mtrace("Notification invalide ou inexistante pour le cours {$courseid}.");
+        return;
     }
 
-    $notif = $courseaccessnotifications[$notifvalue];
+    $notif = $courseaccessnotifications[$notifvalue - 1];
+
     $bodyhtml = urldecode($notif->bodyhtml);
     $find = $CFG->wwwroot . "/";
     $bodyhtml = str_replace($find, "", $bodyhtml);
@@ -1501,12 +1521,21 @@ function local_moofactory_notification_prepare_access_email($user, $courseid, $c
 
         $msgbodyhtml = local_moofactory_notification_replace_variables($variables, $bodyhtml, $data);
 
+         // Gestion des emails en copie
+         $copiedEmails = str_replace(';', ',', $copiedEmails);
+         $copiedEmails = array_map('trim', explode(',', $copiedEmails)); // Supprimer les espaces inutiles
+         $copiedEmails = array_filter($copiedEmails, function ($email) {
+             return filter_var($email, FILTER_VALIDATE_EMAIL); // Valider chaque email
+         });
+ 
         $msg = new stdClass();
         $msg->subject = $notif->subject;
         $msg->from = "moofactory";
         $msg->bodytext = "";
         $msg->bodyhtml = $msgbodyhtml;
-        $ret = local_moofactory_notification_send_email($user, $msg, $courseid, 'coursesaccess_notification');
+        $msg->cc = $copiedEmails;
+
+        $ret = local_moofactory_notification_send_email_with_cc($user, $msg);
     } else {
         mtrace("Pas d'envoi : la notification est inexistante.");
     }
@@ -1569,6 +1598,47 @@ function local_moofactory_notification_prepare_enrollments_email($user, $coursei
     }
 }
 
+function local_moofactory_notification_send_email_with_cc($user, $msg) {
+
+    if (empty($user->email)) {
+        return false;
+    }
+
+    $bodytext = !empty($msg->bodytext) ? $msg->bodytext : $msg->bodyhtml;
+
+    // Envoi de l'email principal
+    $success = email_to_user(
+        $user,                         // Utilisateur destinataire
+        core_user::get_noreply_user(), // Utilisateur expéditeur (noreply)
+        $msg->subject,                 
+        $bodytext,
+        $msg->bodyhtml
+    );
+
+    // Vérification et gestion des emails en copie
+    if (!empty($msg->cc)) {
+        foreach ($msg->cc as $ccEmail) {
+            // Création d'un utilisateur factice pour l'email en copie
+            $ccUser = (object)[
+                'email' => $ccEmail,
+                'id' => -99, // ID factice pour les utilisateurs non-enregistrés
+                'firstname' => 'Copie',
+                'lastname' => 'Notification',
+            ];
+            
+            email_to_user(
+                $ccUser,
+                core_user::get_noreply_user(),
+                "[COPIE MAIL] [USER] [".$user->username."] ".  $msg->subject,
+                "[COPIE MAIL] [USER] [".$user->username."]\n\n".$bodytext,
+                $msg->bodyhtml
+            );
+        }
+    }
+
+    return $success;
+}
+
 function local_moofactory_notification_send_email($user, $msg, $courseid, $name)
 {
     if (!isset($user->email) && empty($user->email)) {
@@ -1596,7 +1666,7 @@ function local_moofactory_notification_send_email($user, $msg, $courseid, $name)
         $message->contexturl = new moodle_url('/course/view.php', array('id' => $courseid));
         $message->contexturlname = 'Your course';
     }
-
+    
     $messageid = message_send($message);
     return $messageid;
 }

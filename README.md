@@ -56,4 +56,3 @@ Si la restriction est levée immédiatement après avoir été ajoutée, la tâc
 C’est un élément à prendre en compte lors des phases de test. 
 
 ---
-
