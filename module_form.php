@@ -140,7 +140,7 @@ class module_form extends moodleform
             $mform->setDefault($name, $value);
 
             // Créer un champ statique pour afficher "jour(s)" après le champ de texte
-            $daysDescription = $index % 2 === 0 ? 'jour(s)' : 'minute(s)';
+            $daysDescription = $index % 2 === 0 ? 'jour(s)' : 'heure(s)';
             $daysDescriptionElement = $mform->createElement('static', $name . '_desc', '', $daysDescription);
 
             // Ajout des champs jours et description dans un groupe
@@ -233,10 +233,10 @@ class module_form extends moodleform
             }
 
             // Créer un élément statique pour la description.
-            $description = $index % 2 === 0 ? 'jour(s)' : 'minute(s)';
+            $description = $index % 2 === 0 ? 'jour(s)' : 'heures(s)';
             $descriptionElement = $mform->createElement('static', $name . '_desc', '', $description);
 
-            // Grouper les champs en paires jours/minutes.
+            // Grouper les champs en paires jours/heuress.
             if ($index % 2 === 0) {
                 $leveeGroups[] = [$element, $descriptionElement];
             } else {

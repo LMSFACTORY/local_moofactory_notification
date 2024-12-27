@@ -247,7 +247,8 @@ function local_moofactory_notification_extend_navigation_course($navigation, $co
                 foreach ($activities as $activity) {
                     $moduleid = $activity["id"];
                     $moduleevents = get_config('local_moofactory_notification', 'moduleevents_' . $courseid . '_' . $moduleid . '');
-                    if (!empty($moduleevents)) {
+                    $modulelevee = get_config('local_moofactory_notification', 'modulelevee_' . $courseid . '_' . $moduleid . '');
+                    if (!empty($moduleevents) || !empty($modulelevee)) {
                         $js .= "$(\"[data-owner='#module-" . $moduleid . "']  .dropdown a.dropdown-toggle[data-toggle='dropdown']\").prepend('<span class=\"icon fa fa-envelope-o fa-fw\"></span>');";
                     }
                 }
@@ -475,61 +476,74 @@ function local_moofactory_notification_send_siteevents_notification()
                         //$targetedevents = calendar_get_legacy_events($previoussiteeventstasktime + $delay, $time + $delay, false, false, true, true, false);
                         //foreach($targetedevents as $targetedevent) {
                         //if($targetedevent->id == $event->id){
-                        // message
-                        $notifvalue = get_config('local_moofactory_notification', 'siteeventsnotification');
-                        $notif = $siteeventsnotifications[$notifvalue];
-                        $bodyhtml = urldecode($notif->bodyhtml);
-                        $find = $CFG->wwwroot . "/";
-                        $bodyhtml = str_replace($find, "", $bodyhtml);
 
-                        $variables = local_moofactory_notification_fetch_variables($bodyhtml);
+                        // Vérifier si la notification a déjà été envoyée pour cet événement
+                        $existingNotification = $DB->get_record('local_mf_event_notifications', array('eventid' => $event->id, 'notified' => 1));
+                        if (!$existingNotification) {
+                            // message
+                            $notifvalue = get_config('local_moofactory_notification', 'siteeventsnotification');
+                            $notif = $siteeventsnotifications[$notifvalue];
+                            $bodyhtml = urldecode($notif->bodyhtml);
+                            $find = $CFG->wwwroot . "/";
+                            $bodyhtml = str_replace($find, "", $bodyhtml);
 
-                        $users = get_users_listing('id');
+                            $variables = local_moofactory_notification_fetch_variables($bodyhtml);
 
-                        if (!empty($notif)) {
-                            foreach ($users as $user) {
-                                if (!is_siteadmin($user)) {
-                                    if (!$user->suspended) {
-                                        $data = new stdClass();
-                                        $data->firstname = $user->firstname;
-                                        $data->lastname = $user->lastname;
-                                        $data->username = $user->username;
-                                        $data->usergroup = "";
-                                        $data->eventdate = date("d/m/Y à H:i", $event->timestart);
-                                        $data->eventname = $event->name;
-                                        $data->coursename = "";
-                                        $data->coursestartdate = "";
-                                        $data->courseenddate = "";
-                                        $data->courseenrolstartdate = "";
-                                        $data->courseenrolenddate = "";
-                                        $data->courseurl = "";
-                                        $data->activityname = "";
-                                        $data->lmsurl = $CFG->wwwroot;
-                                        $data->lmsname = $SITE->fullname;
-                                        $data->interval = "";
+                            $users = get_users_listing('id');
+                            //$users = [$DB->get_record('user', array('id' => 84))];
 
-                                        $msgbodyhtml = local_moofactory_notification_replace_variables($variables, $bodyhtml, $data);
+                            if (!empty($notif)) {
+                                foreach ($users as $user) {
+                                    if (!is_siteadmin($user)) {
+                                        if (!$user->suspended) {
+                                            $data = new stdClass();
+                                            $data->firstname = $user->firstname;
+                                            $data->lastname = $user->lastname;
+                                            $data->username = $user->username;
+                                            $data->usergroup = "";
+                                            $data->eventdate = date("d/m/Y à H:i", $event->timestart);
+                                            $data->eventname = $event->name;
+                                            $data->coursename = "";
+                                            $data->coursestartdate = "";
+                                            $data->courseenddate = "";
+                                            $data->courseenrolstartdate = "";
+                                            $data->courseenrolenddate = "";
+                                            $data->courseurl = "";
+                                            $data->activityname = "";
+                                            $data->lmsurl = $CFG->wwwroot;
+                                            $data->lmsname = $SITE->fullname;
+                                            $data->interval = "";
 
-                                        $msg = new stdClass();
-                                        $msg->subject = $notif->subject;
-                                        $msg->from = "moofactory";
-                                        $msg->bodytext = "";
-                                        $msg->bodyhtml = $msgbodyhtml;
+                                            $msgbodyhtml = local_moofactory_notification_replace_variables($variables, $bodyhtml, $data);
 
-                                        $ret = local_moofactory_notification_send_email($user, $msg, $courseid, 'siteevents_notification');
+                                            $msg = new stdClass();
+                                            $msg->subject = $notif->subject;
+                                            $msg->from = "moofactory";
+                                            $msg->bodytext = "";
+                                            $msg->bodyhtml = $msgbodyhtml;
 
-                                        $dateEnvoi = date("d/m/Y H:i:s", time());
-                                        mtrace("\n" . 'Envoyé le : ' . $dateEnvoi . ' à ' . $data->firstname . ' ' . $data->lastname . ' (Evènement le ' . $data->eventdate . ")");
-                                        mtrace('Objet du mail : ' . $msg->subject);
-                                        $nbnotif++;
+                                            $ret = local_moofactory_notification_send_email($user, $msg, $courseid, 'siteevents_notification');
+
+                                            $dateEnvoi = date("d/m/Y H:i:s", time());
+                                            mtrace("\n" . 'Envoyé le : ' . $dateEnvoi . ' à ' . $data->firstname . ' ' . $data->lastname . ' (Evènement le ' . $data->eventdate . ")");
+                                            mtrace('Objet du mail : ' . $msg->subject);
+                                            $nbnotif++;
+
+                                            // Marquer l'événement comme notifié
+                                            $notification = new stdClass();
+                                            $notification->eventid = $event->id;
+                                            $notification->notificationtime = time();
+                                            $notification->notified = 1;
+                                            $DB->insert_record('local_mf_event_notifications', $notification);
+                                        }
                                     }
                                 }
+                            } else {
+                                mtrace("Pas d'envoi : la notification est inexistante.");
                             }
-                        } else {
-                            mtrace("Pas d'envoi : la notification est inexistante.");
+                            //}
+                            //}
                         }
-                        //}
-                        //}
                     }
                 }
             }
@@ -568,6 +582,14 @@ function local_moofactory_notification_send_coursesenroll_notification()
         foreach ($records as $record) {
             $courseid = $record->courseid;
             $userid = $record->userid;
+
+            // Vérification de la visibilité du cours
+            $course = $DB->get_record('course', array('id' => $courseid), 'id, visible');
+            if (!$course || $course->visible == 0) {
+                // Si le cours n'existe pas ou est masqué, ignorer
+                continue;
+            }
+
             $enrolled = is_enrolled(context_course::instance($courseid), $userid);
             $active = is_enrolled(context_course::instance($courseid), $userid, '', true);
 
@@ -1110,6 +1132,13 @@ function local_moofactory_notification_send_coursesevents_notification()
                 if (!empty($event->courseid) && !empty($event->modulename)) {
                     $courseid = $event->courseid;
                     $coursecontext = \context_course::instance($courseid);
+                    
+                    // Vérification si le cours est visible
+                    $course = $DB->get_record('course', array('id' => $courseid, 'visible' => 1), '*', IGNORE_MISSING);
+                    if (empty($course)) {
+                        //mtrace("Le cours ID {$courseid} n'est pas visible. Notifications ignorées pour ce cours.");
+                        continue;
+                    }
                     // 'moodle/course:isincompletionreports' - this capability is allowed to only students.
                     // Seulement les inscriptions actives.
                     $enrolledusers = get_enrolled_users($coursecontext, 'moodle/course:isincompletionreports', 0, 'u.*', null, 0, 0, true);
@@ -1216,7 +1245,7 @@ function local_moofactory_notification_send_coursesevents_notification()
                                 $variables = local_moofactory_notification_fetch_variables($bodyhtml);
 
                                 if (!empty($notif)) {
-                                    foreach ($enrolledusers as $user) {
+                                    foreach ($enrolledusers as $user) {                                        
 
                                         // Vérification de la capacité avant de continuer.
                                         if (!has_capability('local/moofactory_notification:coursesenrollments', $coursecontext, $user->id)) {
@@ -1796,6 +1825,12 @@ function local_moofactory_notification_send_modulesaccess_notification()
 
         // Récupérer tous les utilisateurs inscrits au cours
         $course = $DB->get_record('course', ['id' => $module->course], '*', MUST_EXIST);
+
+        // Vérifier si le cours est visible
+        if ($course->visible == 0) {
+            continue; // Passer au module suivant
+        }
+
         $context = \context_course::instance($course->id);
         $users = get_enrolled_users($context);
         foreach ($users as $user) {
