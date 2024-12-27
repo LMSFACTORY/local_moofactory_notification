@@ -133,6 +133,27 @@ function xmldb_local_moofactory_notification_upgrade($oldversion) {
         }
     }
 
+    if ($oldversion < 2024122700) {
+        $table = new xmldb_table('local_mf_event_notifications');
+
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('eventid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('notificationtime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('notified', XMLDB_TYPE_INTEGER, '1', null, null, null, '0', 'Indicates if the event has been notified');
+
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        // Créer la table si elle n'existe pas déjà
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Sauvegarder le point de mise à jour pour cette version
+        upgrade_plugin_savepoint(true, 2024122700, 'local', 'moofactory_notification');
+    }
+
+
     // Création des champs personnalisés de cours dans la catégorie 'Notifications'.
     $categoryid = $DB->get_field('customfield_category', 'id', array('name' => get_string('notifications_category', 'local_moofactory_notification')));
 

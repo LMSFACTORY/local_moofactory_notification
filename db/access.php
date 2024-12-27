@@ -42,8 +42,10 @@ $capabilities = array(
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => array(
             'student' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
+            'teacher' => CAP_ALLOW,              
+            'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
+            'coursecreator' => CAP_ALLOW,
         ),
     ),
     'local/moofactory_notification:coursesevents' => array(
@@ -51,9 +53,7 @@ $capabilities = array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => array(
-            'student' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
+            'student' => CAP_ALLOW
         ),
     ),
     'local/moofactory_notification:coursesaccess' => array(
@@ -61,9 +61,7 @@ $capabilities = array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => array(
-            'student' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
+            'student' => CAP_ALLOW
         ),
     ),
     'local/moofactory_notification:modulesaccess' => array(
@@ -71,9 +69,7 @@ $capabilities = array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => array(
-            'student' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
+            'student' => CAP_ALLOW
         ),
     ),
 );
