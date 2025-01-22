@@ -70,7 +70,6 @@ $string['courseeventscheckdateavailability'] = 'Ignore "date" type restrictions'
 $string['courseeventscheckgroupavailability'] = 'Ignore "group" type restrictions';
 $string['usednotification'] = 'Notification used';
 $string['usednotification2'] = 'Notification used (optionnal)';
-$string['selectrole'] = 'Concerned role';
 $string['selectrole2'] = 'Concerned role';
 $string['copienotif'] = 'Copie to';
 

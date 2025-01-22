@@ -184,6 +184,16 @@ class module_form extends moodleform
 
         $mform->setDefault($moduleleveenotificationname, $value);
 
+        $copiemaillevee = 'copiemaillevee_' . $courseid . '_' . $id;
+        $mform->addElement('text', $copiemaillevee, get_string('copienotif', 'local_moofactory_notification'),array('class' => 'copiemaillevee'));
+  
+        $mform->addRule($copiemaillevee, get_string('maxlength', 'form', 255), 'maxlength', 255, 'client'); 
+        $mform->addRule($copiemaillevee, get_string('invalidemail', 'error'), 'regex', '/^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}[;,]?\s*)+$/', 'client');
+        $mform->setType($copiemaillevee, PARAM_TEXT);
+        $value = get_config('local_moofactory_notification', $copiemaillevee);
+
+        $mform->setDefault($copiemaillevee, $value);
+
         $nameleveedelay = 'moduleleveedelai_' . $courseid . '_' . $id;
 
         // Ajouter un groupe contenant l'input et le texte "minute(s)"

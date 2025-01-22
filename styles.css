@@ -2,6 +2,6 @@
     margin-top: 0px;
 }
 
-#id_customfield_courseaccesscopie {
-    width: 450px;
+.copiemaillevee input{
+    width: 450px !important;
 }

@@ -61,6 +61,29 @@ function local_moofactory_notification_extend_navigation_course($navigation, $co
             $handler->save_field_configuration($field, $data);
         }
 
+        // Actualisation de la valeur par défaut du champs notification des inscriptions 2 aux cours en fonction de la valeur de définie au niveau du plugin
+        $array = array();
+        $id = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseenrollmentsnotification2'));
+        if ($id) {
+            $field = \core_customfield\field_controller::create($id);
+            $handler = $field->get_handler();
+            require_login();
+            if (!$handler->can_configure()) {
+                print_error('nopermissionconfigure', 'core_customfield');
+            }
+
+            $records = $DB->get_records('local_mf_notification', array('type' => 'courseenroll'), 'base DESC, name ASC');
+            foreach ($records as $record) {
+                $array[] = $record->name;
+            }
+            $options = implode("\n", $array);
+
+            $data = new stdClass();
+            $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "defaultvalue" => $notifdefaultvalue, "checkbydefault" => "0",  "locked" => "0",  "visibility" => "2");
+
+            $handler->save_field_configuration($field, $data);
+        }
+
         // Actualisation de la valeur par défaut du champs notification non accès aux cours en fonction de la valeur de définie au niveau du plugin
         $array = array();
         $record = $DB->get_record('local_mf_notification', array('id' => get_config('local_moofactory_notification', 'coursesaccessnotification')));
@@ -173,12 +196,11 @@ function local_moofactory_notification_extend_navigation_course($navigation, $co
                     }
                 }
             }
-
-            if (is_null($courseenrollmentstime)) {
+            if (empty($courseenrollmentstime)) {
                 $js .= "$('#id_customfield_courseenrollmentstime').val($coursesenrollmentstime);";
             }
 
-            if (is_null($courseaccesstime)) {
+            if (empty($courseaccesstime)) {
                 $js .= "$('#id_customfield_courseaccesstime').val($coursesaccesstime);";
             }
 
@@ -1139,6 +1161,10 @@ function local_moofactory_notification_send_coursesevents_notification()
                         //mtrace("Le cours ID {$courseid} n'est pas visible. Notifications ignorées pour ce cours.");
                         continue;
                     }
+
+                    if($event->eventtype == 'gradingdue'){
+                        continue;//On ignore ce genre de notif de devoirs 
+                    }
                     // 'moodle/course:isincompletionreports' - this capability is allowed to only students.
                     // Seulement les inscriptions actives.
                     $enrolledusers = get_enrolled_users($coursecontext, 'moodle/course:isincompletionreports', 0, 'u.*', null, 0, 0, true);
@@ -1150,6 +1176,9 @@ function local_moofactory_notification_send_coursesevents_notification()
                         $moduleid = $module->id;
                         $modulename = $module->name;
 
+                        if (!$module->visible) {
+                            continue;// Si l'activité est cachée, on ignore
+                        }
                         // Activation évènements au niveau du cours.
                         $courseevents = local_moofactory_notification_getCustomfield($courseid, 'courseevents', 'checkbox');
 
@@ -1488,35 +1517,15 @@ function local_moofactory_notification_prepare_access_email($user, $courseid, $c
 {
     global $DB, $CFG, $SITE;
 
-    // Récupération des champs personnalisés pour le cours
-    $defaultNotificationValue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseaccessnotification', 'select');
-    $roleSpecificNotificationValue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseaccessnotification2', 'select');
-    $roleToMatch = local_moofactory_notification_getCustomfield($courseid, 'courseaccessrole2', 'select');
-    $copiedEmails = local_moofactory_notification_getCustomfield($courseid, 'courseaccesscopie', 'text');
-
-    // Détermination de la notification à utiliser
-    $notifvalue = $defaultNotificationValue; // Valeur par défaut
-    if (!empty($roleToMatch) && !empty($roleSpecificNotificationValue)) {
-        $coursecontext = \context_course::instance($courseid);
-        $userRoles = get_user_roles($coursecontext, $user->id);
-        $roles = $DB->get_records('role', null, '', 'id, shortname');
-        $roles = array_values($roles);
-        foreach ($userRoles as $userRole) {
-            if ($userRole->shortname === $roles[$roleToMatch-1]->shortname) {
-                $notifvalue = $roleSpecificNotificationValue; // Si le rôle correspond, utiliser la notification spécifique
-                break;
-            }
-        }
-    }
-    $courseaccessnotifications = array_values($courseaccessnotifications);
-    // Validation de la notification sélectionnée
-    if (!isset($courseaccessnotifications[$notifvalue - 1])) {
-        mtrace("Notification invalide ou inexistante pour le cours {$courseid}.");
-        return;
+    $notifvalue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseaccessnotification', 'select');
+    if (!empty($notifvalue)) {
+        $courseaccessnotifications = array_values($courseaccessnotifications);
+        $notifvalue--;
+    } else {
+        $notifvalue = get_config('local_moofactory_notification', 'coursesaccessnotification');
     }
 
-    $notif = $courseaccessnotifications[$notifvalue - 1];
-
+    $notif = $courseaccessnotifications[$notifvalue];
     $bodyhtml = urldecode($notif->bodyhtml);
     $find = $CFG->wwwroot . "/";
     $bodyhtml = str_replace($find, "", $bodyhtml);
@@ -1550,21 +1559,12 @@ function local_moofactory_notification_prepare_access_email($user, $courseid, $c
 
         $msgbodyhtml = local_moofactory_notification_replace_variables($variables, $bodyhtml, $data);
 
-         // Gestion des emails en copie
-         $copiedEmails = str_replace(';', ',', $copiedEmails);
-         $copiedEmails = array_map('trim', explode(',', $copiedEmails)); // Supprimer les espaces inutiles
-         $copiedEmails = array_filter($copiedEmails, function ($email) {
-             return filter_var($email, FILTER_VALIDATE_EMAIL); // Valider chaque email
-         });
- 
         $msg = new stdClass();
         $msg->subject = $notif->subject;
         $msg->from = "moofactory";
         $msg->bodytext = "";
         $msg->bodyhtml = $msgbodyhtml;
-        $msg->cc = $copiedEmails;
-
-        $ret = local_moofactory_notification_send_email_with_cc($user, $msg);
+        $ret = local_moofactory_notification_send_email($user, $msg, $courseid, 'coursesaccess_notification');
     } else {
         mtrace("Pas d'envoi : la notification est inexistante.");
     }
@@ -1574,14 +1574,44 @@ function local_moofactory_notification_prepare_enrollments_email($user, $coursei
 {
     global $DB, $CFG, $SITE;
 
-    $notifvalue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseenrollmentsnotification', 'select');
-    if (!empty($notifvalue)) {
-        $courseenrollmentsnotifications = array_values($courseenrollmentsnotifications);
-        $notifvalue--;
-    } else {
-        $notifvalue = get_config('local_moofactory_notification', 'coursesenrollmentsnotification');
+    // $notifvalue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseenrollmentsnotification', 'select');
+    // if (!empty($notifvalue)) {
+    //     $courseenrollmentsnotifications = array_values($courseenrollmentsnotifications);
+    //     $notifvalue--;
+    // } else {
+    //     $notifvalue = get_config('local_moofactory_notification', 'coursesenrollmentsnotification');
+    // }
+    // $notif = $courseenrollmentsnotifications[$notifvalue];
+
+
+    // Récupération des champs personnalisés pour le cours
+    $defaultNotificationValue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseenrollmentsnotification', 'select');
+    $roleSpecificNotificationValue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseenrollmentsnotification2', 'select');
+    $roleToMatch = local_moofactory_notification_getCustomfield($courseid, 'courseenrollmentsrole', 'select');
+
+    // Détermination de la notification à utiliser
+    $notifvalue = $defaultNotificationValue; // Valeur par défaut
+    if (!empty($roleToMatch) && !empty($roleSpecificNotificationValue)) {
+        $coursecontext = \context_course::instance($courseid);
+        $userRoles = get_user_roles($coursecontext, $user->id);
+        $roles = $DB->get_records('role', null, '', 'id, shortname');
+        $roles = array_values($roles);
+        foreach ($userRoles as $userRole) {
+            if ($userRole->shortname === $roles[$roleToMatch-1]->shortname) {
+                $notifvalue = $roleSpecificNotificationValue; // Si le rôle correspond, utiliser la notification spécifique
+                break;
+            }
+        }
     }
-    $notif = $courseenrollmentsnotifications[$notifvalue];
+    $courseenrollmentsnotifications = array_values($courseenrollmentsnotifications);
+    // Validation de la notification sélectionnée
+    if (!isset($courseenrollmentsnotifications[$notifvalue - 1])) {
+        mtrace("Notification invalide ou inexistante pour le cours {$courseid}.");
+        return;
+    }
+
+    $notif = $courseenrollmentsnotifications[$notifvalue - 1];
+
     $bodyhtml = urldecode($notif->bodyhtml);
     $find = $CFG->wwwroot . "/";
     $bodyhtml = str_replace($find, "", $bodyhtml);
@@ -1987,13 +2017,24 @@ function local_moofactory_notification_prepare_levee_email($user, $courseid, $le
 
         $msgbodyhtml = local_moofactory_notification_replace_variables($variables, $bodyhtml, $data);
 
+        // Gestion des emails en copie
+        $copiedEmails = get_config('local_moofactory_notification', 'copiemaillevee_' . $courseid . '_' . $cm->id . '');
+
+        $copiedEmails = str_replace(';', ',', $copiedEmails);
+        $copiedEmails = array_map('trim', explode(',', $copiedEmails)); // Supprimer les espaces inutiles
+        $copiedEmails = array_filter($copiedEmails, function ($email) {
+            return filter_var($email, FILTER_VALIDATE_EMAIL); // Valider chaque email
+        });
+        
         $msg = new stdClass();
         $msg->subject = $notif->subject;
         $msg->from = "moofactory";
         $msg->bodytext = "";
         $msg->bodyhtml = $msgbodyhtml;
+        $msg->cc = $copiedEmails;
 
-        $ret = local_moofactory_notification_send_email($user, $msg, $courseid, 'levee_notification');
+        //local_moofactory_notification_send_email($user, $msg, $courseid, 'levee_notification');
+        local_moofactory_notification_send_email_with_cc($user, $msg);
         mtrace('Notification de levée de restriction envoyée.');
     } else {
         mtrace("Pas d'envoi : la notification est inexistante.");

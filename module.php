@@ -133,6 +133,15 @@ if ($mform->is_cancelled()) {
     }
     set_config($name, $value, 'local_moofactory_notification');
 
+    $name = 'copiemaillevee_'.$courseid.'_'.$id;
+    if(empty($fromform->$name)){
+        $value = "";
+    }
+    else{
+        $value = $fromform->$name;
+    }
+    set_config($name, $value, 'local_moofactory_notification');
+
     $configvars = ['moduledaysbeforelevee1', 'modulehoursbeforelevee1', 'moduledaysbeforelevee2', 'modulehoursbeforelevee2', 'moduledaysbeforelevee3', 'modulehoursbeforelevee3'];
     foreach($configvars as $configvar){
         $name = $configvar.'_'.$courseid.'_'.$id;

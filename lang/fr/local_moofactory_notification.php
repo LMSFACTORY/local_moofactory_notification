@@ -70,7 +70,6 @@ $string['courseeventscheckdateavailability'] = 'Ne pas tenir compte des restrict
 $string['courseeventscheckgroupavailability'] = 'Ne pas tenir compte des restrictions de type "groupe"';
 $string['usednotification'] = 'Notification utilisée';
 $string['usednotification2'] = 'Notification utilisée 2 (optionnel)';
-$string['selectrole'] = 'Rôle concerné';
 $string['selectrole2'] = 'Rôle concerné';
 $string['copienotif'] = 'Copie à';
 
