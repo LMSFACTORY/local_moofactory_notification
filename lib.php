@@ -196,10 +196,10 @@ function local_moofactory_notification_extend_navigation_course($navigation, $co
                     }
                 }
             }
-            if (empty($courseenrollmentstime)) {
+            if (is_null($courseenrollmentstime)) {
                 $js .= "$('#id_customfield_courseenrollmentstime').val($coursesenrollmentstime);";
             }
-            if (empty($courseaccesstime)) {
+            if (is_null($courseaccesstime)) {
                 $js .= "$('#id_customfield_courseaccesstime').val($coursesaccesstime);";
             }
 
@@ -505,8 +505,6 @@ function local_moofactory_notification_send_siteevents_notification()
                             $notifvalue = get_config('local_moofactory_notification', 'siteeventsnotification');
                             $notif = $siteeventsnotifications[$notifvalue];
                             $bodyhtml = urldecode($notif->bodyhtml);
-                            $find = $CFG->wwwroot . "/";
-                            $bodyhtml = str_replace($find, "", $bodyhtml);
 
                             $variables = local_moofactory_notification_fetch_variables($bodyhtml);
 
@@ -1267,8 +1265,6 @@ function local_moofactory_notification_send_coursesevents_notification()
 
                                 $notif = $courseeventsnotifications[$notifvalue];
                                 $bodyhtml = urldecode($notif->bodyhtml);
-                                $find = $CFG->wwwroot . "/";
-                                $bodyhtml = str_replace($find, "", $bodyhtml);
 
                                 $variables = local_moofactory_notification_fetch_variables($bodyhtml);
 
@@ -1526,8 +1522,6 @@ function local_moofactory_notification_prepare_access_email($user, $courseid, $c
 
     $notif = $courseaccessnotifications[$notifvalue];
     $bodyhtml = urldecode($notif->bodyhtml);
-    $find = $CFG->wwwroot . "/";
-    $bodyhtml = str_replace($find, "", $bodyhtml);
 
     $variables = local_moofactory_notification_fetch_variables($bodyhtml);
 
@@ -1602,8 +1596,6 @@ function local_moofactory_notification_prepare_enrollments_email($user, $coursei
     $notif = $courseenrollmentsnotifications[$notifvalue - 1];
 
     $bodyhtml = urldecode($notif->bodyhtml);
-    $find = $CFG->wwwroot . "/";
-    $bodyhtml = str_replace($find, "", $bodyhtml);
 
     $variables = local_moofactory_notification_fetch_variables($bodyhtml);
 
@@ -1984,8 +1976,6 @@ function local_moofactory_notification_prepare_levee_email($user, $courseid, $le
 
 
     $bodyhtml = urldecode($notif->bodyhtml);
-    $find = $CFG->wwwroot . "/";
-    $bodyhtml = str_replace($find, "", $bodyhtml);
 
     $variables = local_moofactory_notification_fetch_variables($bodyhtml);
 
