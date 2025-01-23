@@ -199,7 +199,6 @@ function local_moofactory_notification_extend_navigation_course($navigation, $co
             if (empty($courseenrollmentstime)) {
                 $js .= "$('#id_customfield_courseenrollmentstime').val($coursesenrollmentstime);";
             }
-
             if (empty($courseaccesstime)) {
                 $js .= "$('#id_customfield_courseaccesstime').val($coursesaccesstime);";
             }
@@ -1574,16 +1573,6 @@ function local_moofactory_notification_prepare_enrollments_email($user, $coursei
 {
     global $DB, $CFG, $SITE;
 
-    // $notifvalue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseenrollmentsnotification', 'select');
-    // if (!empty($notifvalue)) {
-    //     $courseenrollmentsnotifications = array_values($courseenrollmentsnotifications);
-    //     $notifvalue--;
-    // } else {
-    //     $notifvalue = get_config('local_moofactory_notification', 'coursesenrollmentsnotification');
-    // }
-    // $notif = $courseenrollmentsnotifications[$notifvalue];
-
-
     // Récupération des champs personnalisés pour le cours
     $defaultNotificationValue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseenrollmentsnotification', 'select');
     $roleSpecificNotificationValue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseenrollmentsnotification2', 'select');
@@ -2010,10 +1999,16 @@ function local_moofactory_notification_prepare_levee_email($user, $courseid, $le
         $data->eventname = "";
         $course = $DB->get_record('course', array('id' => $courseid), 'fullname,startdate,enddate');
         $data->coursename = $course->fullname;
+        $data->coursestartdate = $course->startdate == "0" ? "" : date("d/m/Y à H:i", $course->startdate);
+        $data->courseenddate = $course->enddate == "0" ? "" : date("d/m/Y à H:i", $course->enddate);
+        list($courseenrolstartdate, $courseenrolenddate) = local_moofactory_notification_get_user_enrolment_dates($courseid, $user->id);
+        $data->courseenrolstartdate = $courseenrolstartdate == "0" ? "" : date("d/m/Y à H:i", $courseenrolstartdate);
+        $data->courseenrolenddate = $courseenrolenddate == "0" ? "" : date("d/m/Y à H:i", $courseenrolenddate);
         $data->courseurl = $CFG->wwwroot . '/course/view.php?id=' . $courseid;
         $data->activityname = $cm->name;
         $data->lmsurl = $CFG->wwwroot;
         $data->lmsname = $SITE->fullname;
+        $data->interval = "";
 
         $msgbodyhtml = local_moofactory_notification_replace_variables($variables, $bodyhtml, $data);
 

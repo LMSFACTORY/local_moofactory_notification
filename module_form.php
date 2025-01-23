@@ -192,7 +192,9 @@ class module_form extends moodleform
         $mform->setType($copiemaillevee, PARAM_TEXT);
         $value = get_config('local_moofactory_notification', $copiemaillevee);
 
-        $mform->setDefault($copiemaillevee, $value);
+        if($value){            
+            $mform->setDefault($copiemaillevee, $value);
+        }
 
         $nameleveedelay = 'moduleleveedelai_' . $courseid . '_' . $id;
 
