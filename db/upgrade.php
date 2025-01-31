@@ -477,6 +477,24 @@ function xmldb_local_moofactory_notification_upgrade($oldversion) {
                 upgrade_plugin_savepoint(true, 2025012106, 'local', 'moofactory_notification');
             }
         }
+        if ($oldversion<2025013100) {// Mise à jour des options 
+            $id = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseenrollmentsrole'));
+            if($id){
+                $field = $DB->get_record('customfield_field', array('shortname' => 'courseenrollmentsrole'));
+                $configdata = json_decode($field->configdata, true);
+                
+                $roles = $DB->get_records('role', null, '', 'id, name, shortname');
+                $rolenames = role_fix_names($roles);
+                $new_options = implode("\n", array_column($rolenames, 'localname'));
+                
+                if ($configdata['options'] !== $new_options) {
+                    $configdata['options'] = $new_options;
+                    $field->configdata = json_encode($configdata);
+                    $DB->update_record('customfield_field', $field);
+                }
+                upgrade_plugin_savepoint(true, 2025013100, 'local', 'moofactory_notification');
+            }
+        }
     
         // Champ 'Evènements liés à ce cours'
         $id = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseevents'));
