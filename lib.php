@@ -713,8 +713,8 @@ function local_moofactory_notification_send_coursesaccess_notification()
                             $userid = $user->id;
 
                             // Vérification de la capacité avant de continuer.
-                            if (!has_capability('local/moofactory_notification:coursesenrollments', $coursecontext, $userid)) {
-                                mtrace("Utilisateur {$userid} ignoré : capacité 'local/moofactory_notification:coursesenrollments' non satisfaite.");
+                            if (!has_capability('local/moofactory_notification:coursesaccess', $coursecontext, $userid)) {
+                                mtrace("Utilisateur {$userid} ignoré : capacité 'local/moofactory_notification:coursesaccess' non satisfaite.");
                                 continue;
                             }
 
@@ -1162,9 +1162,8 @@ function local_moofactory_notification_send_coursesevents_notification()
                     if($event->eventtype == 'gradingdue'){
                         continue;//On ignore ce genre de notif de devoirs 
                     }
-                    // 'moodle/course:isincompletionreports' - this capability is allowed to only students.
                     // Seulement les inscriptions actives.
-                    $enrolledusers = get_enrolled_users($coursecontext, 'moodle/course:isincompletionreports', 0, 'u.*', null, 0, 0, true);
+                    $enrolledusers = get_enrolled_users($coursecontext, '', 0, 'u.*', null, 0, 0, true);
 
                     $instances = get_fast_modinfo($event->courseid, $event->userid)->get_instances_of($event->modulename);
                     if (array_key_exists($event->instance, $instances)) {
@@ -1272,8 +1271,8 @@ function local_moofactory_notification_send_coursesevents_notification()
                                     foreach ($enrolledusers as $user) {                                        
 
                                         // Vérification de la capacité avant de continuer.
-                                        if (!has_capability('local/moofactory_notification:coursesenrollments', $coursecontext, $user->id)) {
-                                            mtrace("Utilisateur {$user->id} ignoré : capacité 'local/moofactory_notification:coursesenrollments' non satisfaite.");
+                                        if (!has_capability('local/moofactory_notification:coursesevents', $coursecontext, $user->id)) {
+                                            mtrace("Utilisateur {$user->id} ignoré : capacité 'local/moofactory_notification:coursesevents' non satisfaite.");
                                             continue;
                                         }
                                         $instances = get_fast_modinfo($event->courseid, $user->id)->get_instances_of($event->modulename);
@@ -1847,8 +1846,8 @@ function local_moofactory_notification_send_modulesaccess_notification()
         foreach ($users as $user) {
 
             // Vérification de la capacité avant de continuer.
-            if (!has_capability('local/moofactory_notification:coursesenrollments', $context, $user->id)) {
-                mtrace("Utilisateur {$user->id} ignoré : capacité 'local/moofactory_notification:coursesenrollments' non satisfaite.");
+            if (!has_capability('local/moofactory_notification:modulesaccess', $context, $user->id)) {
+                mtrace("Utilisateur {$user->id} ignoré : capacité 'local/moofactory_notification:modulesaccess' non satisfaite.");
                 continue;
             }
 
