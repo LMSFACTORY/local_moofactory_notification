@@ -218,6 +218,7 @@ function xmldb_local_moofactory_notification_upgrade($oldversion) {
             $handler->save_field_configuration($field, $data);
         }
 
+        $beforeid = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseaccess'));
         // Select choix de la notification
         $id = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseenrollmentsnotification'));
         if(empty($id)){
@@ -249,6 +250,89 @@ function xmldb_local_moofactory_notification_upgrade($oldversion) {
             $data->id = 0;
     
             $handler->save_field_configuration($field, $data);
+            $handler->move_field($field, $categoryid, $beforeid);
+        }
+
+        //Delete champs 'courseaccessnotification2' && 'courseaccessrole2' && 'courseaccesscopie'
+        $idcourseaccessnotif2 = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseaccessnotification2'));
+        if($idcourseaccessnotif2){
+            $DB->delete_records('customfield_field', array('id' => $idcourseaccessnotif2));
+        }
+        $idcourseaccessrole2 = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseaccessrole2'));
+        if($idcourseaccessrole2){
+            $DB->delete_records('customfield_field', array('id' => $idcourseaccessrole2));
+        }
+        $copyfield = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseaccesscopie'));
+        if ($copyfield) {
+            $DB->delete_records('customfield_field', array('id' => $copyfield));
+        }
+        
+        // Select choix de la notification 2
+        $id = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseenrollmentsnotification2'));
+        if(empty($id)){
+            $type = "select";
+            $field = \core_customfield\field_controller::create(0, (object)['type' => $type], $category);
+
+            $handler = $field->get_handler();
+            if (!$handler->can_configure()) {
+                print_error('nopermissionconfigure', 'core_customfield');
+            }
+
+            $array = Array();
+            $records = $DB->get_records('local_mf_notification', array('type'=>'courseenroll'));
+            foreach($records as $record) {
+                $array[] = $record->name;
+            }
+            $options = implode("\n", $array);
+            $record = $DB->get_record('local_mf_notification', array('id'=>get_config('local_moofactory_notification', 'coursesaccessnotification')));
+            $defaultvalue = $record->name;
+            
+            $data = new stdClass();
+            $data->name = get_string('usednotification2', 'local_moofactory_notification');
+            $data->shortname = 'courseenrollmentsnotification2';
+            $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "defaultvalue" => $defaultvalue, "checkbydefault" => "0",  "locked" => "0",  "visibility" => "2");
+            $data->mform_isexpanded_id_header_specificsettings = 1;
+            $data->mform_isexpanded_id_course_handler_header = 1;
+            $data->categoryid = $categoryid;
+            $data->type = $type;
+            $data->id = 0;
+    
+            $handler->save_field_configuration($field, $data);
+            $handler->move_field($field, $categoryid, $beforeid);
+        }
+
+        //Select choix role notif 2
+        $id = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseenrollmentsrole'));
+        if(empty($id)){
+            $type = "select";
+            $field = \core_customfield\field_controller::create(0, (object)['type' => $type], $category);
+
+            $handler = $field->get_handler();
+            if (!$handler->can_configure()) {
+                print_error('nopermissionconfigure', 'core_customfield');
+            }
+
+            $roles = $DB->get_records('role', null, '', 'id, name, shortname');
+            $rolenames = role_fix_names($roles);
+
+            $array = [];
+            foreach ($roles as $role) {
+                $array[] = $rolenames[$role->id]->localname ; 
+            }
+            $options = implode("\n", $array);
+            
+            $data = new stdClass();
+            $data->name = get_string('selectrole2', 'local_moofactory_notification');
+            $data->shortname = 'courseenrollmentsrole';
+            $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "checkbydefault" => "0",  "locked" => "0",  "visibility" => "2");
+            $data->mform_isexpanded_id_header_specificsettings = 1;
+            $data->mform_isexpanded_id_course_handler_header = 1;
+            $data->categoryid = $categoryid;
+            $data->type = $type;
+            $data->id = 0;
+    
+            $handler->save_field_configuration($field, $data);
+            $handler->move_field($field, $categoryid, $beforeid);
         }
 
         // Champ 'Non accès à ce cours'
@@ -338,145 +422,6 @@ function xmldb_local_moofactory_notification_upgrade($oldversion) {
             $handler->move_field($field, $categoryid, $beforeid);
         }
 
-        // Select choix de la notification 2
-        $id = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseaccessnotification2'));
-        if(empty($id)){
-            $type = "select";
-            $field = \core_customfield\field_controller::create(0, (object)['type' => $type], $category);
-
-            $handler = $field->get_handler();
-            if (!$handler->can_configure()) {
-                print_error('nopermissionconfigure', 'core_customfield');
-            }
-
-            $array = Array();
-            $records = $DB->get_records('local_mf_notification', array('type'=>'courseaccess'));
-            foreach($records as $record) {
-                $array[] = $record->name;
-            }
-            $options = implode("\n", $array);
-            $record = $DB->get_record('local_mf_notification', array('id'=>get_config('local_moofactory_notification', 'coursesaccessnotification')));
-            $defaultvalue = $record->name;
-            
-            $data = new stdClass();
-            $data->name = get_string('usednotification2', 'local_moofactory_notification');
-            $data->shortname = 'courseaccessnotification2';
-            $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "defaultvalue" => $defaultvalue, "checkbydefault" => "0",  "locked" => "0",  "visibility" => "2");
-            $data->mform_isexpanded_id_header_specificsettings = 1;
-            $data->mform_isexpanded_id_course_handler_header = 1;
-            $data->categoryid = $categoryid;
-            $data->type = $type;
-            $data->id = 0;
-    
-            $handler->save_field_configuration($field, $data);
-            $handler->move_field($field, $categoryid, $beforeid);
-        }
-
-        //Select choix role notif 2
-        $id = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseaccessrole2'));
-        if(empty($id)){
-            $type = "select";
-            $field = \core_customfield\field_controller::create(0, (object)['type' => $type], $category);
-
-            $handler = $field->get_handler();
-            if (!$handler->can_configure()) {
-                print_error('nopermissionconfigure', 'core_customfield');
-            }
-
-            $roles = $DB->get_records('role', null, '', 'id, shortname');
-            $rolenames = role_fix_names($roles);
-
-            $array = [];
-            foreach ($roles as $role) {
-                $array[] = $rolenames[$role->id]->localname ; 
-            }
-            $options = implode("\n", $array);
-            
-            $data = new stdClass();
-            $data->name = get_string('selectrole2', 'local_moofactory_notification');
-            $data->shortname = 'courseaccessrole2';
-            $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "checkbydefault" => "0",  "locked" => "0",  "visibility" => "2");
-            $data->mform_isexpanded_id_header_specificsettings = 1;
-            $data->mform_isexpanded_id_course_handler_header = 1;
-            $data->categoryid = $categoryid;
-            $data->type = $type;
-            $data->id = 0;
-    
-            $handler->save_field_configuration($field, $data);
-            $handler->move_field($field, $categoryid, $beforeid);
-        }
-
-        if ($oldversion < 2025012106) {
-
-            $id_notification = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseenrollmentsnotification'));
-            $id_notification2 = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseaccessnotification2'));
-            $id_role = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseaccessrole2'));
-            $id_event = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseevents'));
-    
-            $sortorder_notification = $DB->get_field('customfield_field', 'sortorder', array('id' => $id_notification));
-            $sortorder_event = $DB->get_field('customfield_field', 'sortorder', array('id' => $id_event));
-
-
-            if ($id_notification2 && $id_role) {
-                //Renommer 'courseaccessnotification2' en 'courseenrollmentsnotification2' + maj sortorder
-                $DB->set_field('customfield_field', 'shortname', 'courseenrollmentsnotification2', array('id' => $id_notification2));
-                $DB->set_field('customfield_field', 'sortorder', $sortorder_notification + 1, array('id' => $id_notification2));
-            
-                //Renommer 'courseaccessrole2' en 'courseenrollmentsrole' + maj sortorder
-                $DB->set_field('customfield_field', 'shortname', 'courseenrollmentsrole', array('id' => $id_role));
-                $DB->set_field('customfield_field', 'sortorder', $sortorder_notification + 2, array('id' => $id_role));
-
-                // Supprimer le champ 'courseaccesscopie'
-                $copyfield = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseaccesscopie'));
-                if ($copyfield) {
-                    $DB->delete_records('customfield_field', array('id' => $copyfield));
-                }
-                // MAJ sortorder
-               // $fields_after = $DB->get_records('customfield_field', array('categoryid' => 2, 'sortorder' => ['>', $sortorder_notification]), 'sortorder ASC');
-              
-               $sql = "SELECT * FROM {customfield_field} 
-                        WHERE categoryid = :categoryid 
-                        AND sortorder > :sortorder_notification
-                        AND sortorder < :sortorder_event
-                        AND shortname NOT IN ('courseenrollmentsrole', 'courseenrollmentsnotification2')
-                        ORDER BY sortorder ASC";
-
-                $fields_after = $DB->get_records_sql($sql, array('categoryid' => 2, 'sortorder_notification' => $sortorder_notification, 'sortorder_event' => $sortorder_event));
-
-                foreach ($fields_after as $field) {
-                    $DB->set_field('customfield_field', 'sortorder', $field->sortorder + 2, array('id' => $field->id));
-                }
-
-                // Actualisation de la valeur de configdata pour 'courseenrollmentsnotification2'
-                $array = array();
-                $record = $DB->get_record('local_mf_notification', array('id' => get_config('local_moofactory_notification', 'coursesenrollmentsnotification')));
-                $notifdefaultvalue = $record->name;
-                
-                // Récupération du champ 'courseenrollmentsnotification2'
-                $id = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseenrollmentsnotification2'));
-                if ($id) {
-                    $field = \core_customfield\field_controller::create($id);
-                    $handler = $field->get_handler();
-                    require_login();
-                    if (!$handler->can_configure()) {
-                        print_error('nopermissionconfigure', 'core_customfield');
-                    }
-
-                    $records = $DB->get_records('local_mf_notification', array('type' => 'courseenroll'), 'base DESC, name ASC');
-                    foreach ($records as $record) {
-                        $array[] = $record->name;
-                    }
-                    $options = implode("\n", $array);
-
-                    $data = new stdClass();
-                    $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "defaultvalue" => $notifdefaultvalue, "checkbydefault" => "0",  "locked" => "0",  "visibility" => "2");
-
-                    $handler->save_field_configuration($field, $data);
-                }
-
-                upgrade_plugin_savepoint(true, 2025012106, 'local', 'moofactory_notification');
-            }
-        }
         if ($oldversion<2025013100) {// Mise à jour des options 
             $id = $DB->get_field('customfield_field', 'id', array('shortname' => 'courseenrollmentsrole'));
             if($id){
