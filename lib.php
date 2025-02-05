@@ -1576,7 +1576,7 @@ function local_moofactory_notification_prepare_enrollments_email($user, $coursei
     if (!empty($roleToMatch) && !empty($roleSpecificNotificationValue)) {
         $coursecontext = \context_course::instance($courseid);
         $userRoles = get_user_roles($coursecontext, $user->id);
-        $roles = $DB->get_records('role', null, '', 'id, shortname');
+        $roles = $DB->get_records('role', null, '', 'id, name, shortname');
         $roles = array_values($roles);
         foreach ($userRoles as $userRole) {
             if ($userRole->shortname === $roles[$roleToMatch-1]->shortname) {
