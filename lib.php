@@ -150,8 +150,8 @@ function local_moofactory_notification_extend_navigation_course($navigation, $co
             $courseenrollmentstime = local_moofactory_notification_getCustomfield($courseid, 'courseenrollmentstime', 'text');
             $courseaccesstime = local_moofactory_notification_getCustomfield($courseid, 'courseaccesstime', 'text');
 
-            $js .= "$('<hr>').insertBefore($('#id_customfield_courseaccess').closest('.form-group.row.fitem'));";
-            $js .= "$('<hr>').insertBefore($('#id_customfield_courseevents').closest('.form-group.row.fitem'));";
+            $js .= "$('<hr>').insertBefore($('#id_customfield_courseaccess').closest('.fitem'));";
+            $js .= "$('<hr>').insertBefore($('#id_customfield_courseevents').closest('.fitem'));";
 
             $js .= "$('#id_customfield_courseenrollmentsnotification option[value=\"0\"]').remove();";
             $js .= "$('#id_customfield_courseaccessnotification option[value=\"0\"]').remove();";
