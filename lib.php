@@ -22,6 +22,8 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use function PHPSTORM_META\type;
+
 require_once("classes/info_moofactory_notification.php");
 require_once($CFG->dirroot . '/course/format/moofactory/lib.php');
 
@@ -374,7 +376,7 @@ function local_moofactory_notification_user_enrolment_updated($event): bool
         // L'inscription de l'utilisateur n'est plus active...
         // Il faut supprimer la ligne correspondante dans la table local_mf_accessnotif et local_mf_modaccessnotif
         $DB->delete_records('local_mf_accessnotif', array('userid' => $userid, 'courseid' => $courseid));
-        delete_mf_modaccessnotif_records($courseid,$userid);
+        delete_mf_modaccessnotif_records($courseid, $userid);
     }
     return true;
 }
@@ -389,12 +391,13 @@ function local_moofactory_notification_user_enrolment_deleted($event): bool
     // Il faut supprimer la ligne correspondante dans la table local_mf_accessnotif, local_mf_modaccessnotif et local_mf_enrollnotif
     $DB->delete_records('local_mf_accessnotif', array('userid' => $userid, 'courseid' => $courseid));
     $DB->delete_records('local_mf_enrollnotif', array('userid' => $userid, 'courseid' => $courseid));
-    delete_mf_modaccessnotif_records($courseid,$userid);
+    delete_mf_modaccessnotif_records($courseid, $userid);
 
     return true;
 }
 
-function delete_mf_modaccessnotif_records($courseid,$userid){
+function delete_mf_modaccessnotif_records($courseid, $userid)
+{
     global $DB;
     // Récupérer les moduleid du cours
     $sql = "SELECT cm.id 
@@ -440,10 +443,11 @@ function local_moofactory_notification_course_updated($event): bool
     }
     return true;
 }
-function local_moofactory_notification_module_deleted($event) {
+function local_moofactory_notification_module_deleted($event)
+{
     global $DB;
 
-    $moduleid = $event->objectid; 
+    $moduleid = $event->objectid;
 
     // Supprimez les données de notifs local_mf_modaccessnotif liées au module supprimé
     $DB->delete_records('local_mf_modaccessnotif', array('moduleid' => $moduleid));
@@ -772,7 +776,7 @@ function local_moofactory_notification_send_coursesaccess_notification()
                                         $enrolments = local_moofactory_notification_get_user_enrolments($courseid, $userid);
                                         $times = array();
                                         foreach ($enrolments as $enrolment) {
-                                            $times[] = !empty($enrolment->timestart)?$enrolment->timestart:$enrolment->timecreated;
+                                            $times[] = !empty($enrolment->timestart) ? $enrolment->timestart : $enrolment->timecreated;
                                         }
                                         $timestart = min($times);
                                         $lastaccesstime = $timestart;
@@ -1151,7 +1155,7 @@ function local_moofactory_notification_send_coursesevents_notification()
                 if (!empty($event->courseid) && !empty($event->modulename)) {
                     $courseid = $event->courseid;
                     $coursecontext = \context_course::instance($courseid);
-                    
+
                     // Vérification si le cours est visible
                     $course = $DB->get_record('course', array('id' => $courseid, 'visible' => 1), '*', IGNORE_MISSING);
                     if (empty($course)) {
@@ -1159,8 +1163,8 @@ function local_moofactory_notification_send_coursesevents_notification()
                         continue;
                     }
 
-                    if($event->eventtype == 'gradingdue'){
-                        continue;//On ignore ce genre de notif de devoirs 
+                    if ($event->eventtype == 'gradingdue') {
+                        continue; //On ignore ce genre de notif de devoirs 
                     }
                     // Seulement les inscriptions actives.
                     $enrolledusers = get_enrolled_users($coursecontext, '', 0, 'u.*', null, 0, 0, true);
@@ -1173,7 +1177,7 @@ function local_moofactory_notification_send_coursesevents_notification()
                         $modulename = $module->name;
 
                         if (!$module->visible) {
-                            continue;// Si l'activité est cachée, on ignore
+                            continue; // Si l'activité est cachée, on ignore
                         }
                         // Activation évènements au niveau du cours.
                         $courseevents = local_moofactory_notification_getCustomfield($courseid, 'courseevents', 'checkbox');
@@ -1283,40 +1287,28 @@ function local_moofactory_notification_send_coursesevents_notification()
                                             $module = $instances[$event->instance];
                                         }
 
-                                        $moduleavailable = true;
+                                        // Vérification section availability 
+                                        $sectionavailable = true;
+                                        $section = $DB->get_record('course_sections', array('id' => $module->section), '*', IGNORE_MISSING);
+                                        if (!empty($section->availability)) {
+                                            $modinfo = get_fast_modinfo($event->courseid, $user->id);
+                                            $section_info = $modinfo->get_section_info((int)$section->section);
+                                            $si = new \core_availability\info_section($section_info);
+                                            $sectionavailable = local_moofactory_check_availability($si, $user->id, 'section'); 
+                                            if(!$sectionavailable){
+                                                mtrace("Utilisateur {$user->id} ignoré : section {$module->section} non disponible.");
+                                                continue;
+                                            }
+                                        }
 
+                                        // Vérification module availability
+                                        $moduleavailable = true;
                                         if (!empty($modulecheckavailabilityvalue) && !empty($module->availability)) {
                                             // On tient compte des restrictions s'il y en a.
-
                                             // Get availability information.
                                             $ci = new \core_availability\info_moofactory_notification($module);
                                             $ci->set_modinfo($event->courseid, $user->id);
-
-                                            $tree = $ci->get_availability_tree();
-                                            list($innernot, $andoperator) = $tree->get_logic_flags(false);
-                                            $children = $tree->get_all_children('core_availability\condition');
-
-                                            // Il faut traiter chaque restriction pour en déduire la disponibilité du module.
-                                            foreach ($children as $index => $child) {
-                                                $childresult = $child->is_available($innernot, $ci, true, $user->id);
-                                                $type = preg_replace('~^availability_(.*?)\\\\condition$~', '$1', get_class($child));
-
-                                                if ($type != "date" && $type != "group") {
-                                                    $moduleavailable &= $childresult;
-                                                } elseif ($type == "date") {
-                                                    if (!empty($modulecheckdateavailabilityvalue)) {
-                                                        $moduleavailable &= true;
-                                                    } else {
-                                                        $moduleavailable &= $childresult;
-                                                    }
-                                                } elseif ($type == "group") {
-                                                    if (!empty($modulecheckgroupavailabilityvalue)) {
-                                                        $moduleavailable &= true;
-                                                    } else {
-                                                        $moduleavailable &= $childresult;
-                                                    }
-                                                }
-                                            }
+                                            $moduleavailable = local_moofactory_check_availability($ci, $user->id,'module');
                                         }
 
                                         // Pas de notification si l'activité est achevée.
@@ -1376,6 +1368,41 @@ function local_moofactory_notification_send_coursesevents_notification()
     mtrace("\n" . $nbnotif . ' notification(s) envoyée(s).' . "\n");
 }
 
+function local_moofactory_check_availability($info, $userid, $typeinfo){
+    $avalaible=true;
+    $tree = $info->get_availability_tree();
+    list($innernot, $andoperator) = $tree->get_logic_flags(false);
+    $children = $tree->get_all_children('core_availability\condition');
+    
+    // Il faut traiter chaque restriction pour en déduire la disponibilité du module.
+    foreach ($children as $index => $child) {
+        $childresult = $child->is_available($innernot, $info, true, $userid);
+        $type = preg_replace('~^availability_(.*?)\\\\condition$~', '$1', get_class($child));
+
+        if($typeinfo==='section'){
+            $avalaible &= $childresult;
+            continue;
+        }
+        //On ne limite les restrictions que pour les modules
+        if ($type != "date" && $type != "group") {
+            $avalaible &= $childresult;
+        } elseif ($type == "date") {
+            if (!empty($modulecheckdateavailabilityvalue)) {
+                $avalaible &= true;
+            } else {
+                $avalaible &= $childresult;
+            }
+        } elseif ($type == "group") {
+            if (!empty($modulecheckgroupavailabilityvalue)) {
+                $avalaible &= true;
+            } else {
+                $avalaible &= $childresult;
+            }
+        }
+    }
+
+    return $avalaible;
+}
 function local_moofactory_notification_getCustomfield($courseid, $name, $type)
 {
     global $DB;
@@ -1579,7 +1606,7 @@ function local_moofactory_notification_prepare_enrollments_email($user, $coursei
         $roles = $DB->get_records('role', null, '', 'id, name, shortname');
         $roles = array_values($roles);
         foreach ($userRoles as $userRole) {
-            if ($userRole->shortname === $roles[$roleToMatch-1]->shortname) {
+            if ($userRole->shortname === $roles[$roleToMatch - 1]->shortname) {
                 $notifvalue = $roleSpecificNotificationValue; // Si le rôle correspond, utiliser la notification spécifique
                 break;
             }
@@ -1637,7 +1664,8 @@ function local_moofactory_notification_prepare_enrollments_email($user, $coursei
     }
 }
 
-function local_moofactory_notification_send_email_with_cc($user, $msg) {
+function local_moofactory_notification_send_email_with_cc($user, $msg)
+{
 
     if (empty($user->email)) {
         return false;
@@ -1649,7 +1677,7 @@ function local_moofactory_notification_send_email_with_cc($user, $msg) {
     $success = email_to_user(
         $user,                         // Utilisateur destinataire
         core_user::get_noreply_user(), // Utilisateur expéditeur (noreply)
-        $msg->subject,                 
+        $msg->subject,
         $bodytext,
         $msg->bodyhtml
     );
@@ -1664,12 +1692,12 @@ function local_moofactory_notification_send_email_with_cc($user, $msg) {
                 'firstname' => 'Copie',
                 'lastname' => 'Notification',
             ];
-            
+
             email_to_user(
                 $ccUser,
                 core_user::get_noreply_user(),
-                "[COPIE MAIL] [USER] [".$user->username."] ".  $msg->subject,
-                "[COPIE MAIL] [USER] [".$user->username."]\n\n".$bodytext,
+                "[COPIE MAIL] [USER] [" . $user->username . "] " .  $msg->subject,
+                "[COPIE MAIL] [USER] [" . $user->username . "]\n\n" . $bodytext,
                 $msg->bodyhtml
             );
         }
@@ -1705,7 +1733,7 @@ function local_moofactory_notification_send_email($user, $msg, $courseid, $name)
         $message->contexturl = new moodle_url('/course/view.php', array('id' => $courseid));
         $message->contexturlname = 'Your course';
     }
-    
+
     $messageid = message_send($message);
     return $messageid;
 }
@@ -2009,7 +2037,7 @@ function local_moofactory_notification_prepare_levee_email($user, $courseid, $le
         $copiedEmails = array_filter($copiedEmails, function ($email) {
             return filter_var($email, FILTER_VALIDATE_EMAIL); // Valider chaque email
         });
-        
+
         $msg = new stdClass();
         $msg->subject = $notif->subject;
         $msg->from = "moofactory";
