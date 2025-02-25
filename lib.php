@@ -1294,7 +1294,7 @@ function local_moofactory_notification_send_coursesevents_notification()
                                             $modinfo = get_fast_modinfo($event->courseid, $user->id);
                                             $section_info = $modinfo->get_section_info((int)$section->section);
                                             $si = new \core_availability\info_section($section_info);
-                                            $sectionavailable = local_moofactory_check_availability($si, $user->id, 'section'); 
+                                            $sectionavailable = local_moofactory_check_availability($si, $user->id, $modulecheckdateavailabilityvalue, $modulecheckgroupavailabilityvalue); 
                                             if(!$sectionavailable){
                                                 mtrace("Utilisateur {$user->id} ignoré : section {$module->section} non disponible.");
                                                 continue;
@@ -1308,7 +1308,7 @@ function local_moofactory_notification_send_coursesevents_notification()
                                             // Get availability information.
                                             $ci = new \core_availability\info_moofactory_notification($module);
                                             $ci->set_modinfo($event->courseid, $user->id);
-                                            $moduleavailable = local_moofactory_check_availability($ci, $user->id,'module');
+                                            $moduleavailable = local_moofactory_check_availability($ci, $user->id, $modulecheckdateavailabilityvalue, $modulecheckgroupavailabilityvalue);
                                         }
 
                                         // Pas de notification si l'activité est achevée.
@@ -1368,7 +1368,7 @@ function local_moofactory_notification_send_coursesevents_notification()
     mtrace("\n" . $nbnotif . ' notification(s) envoyée(s).' . "\n");
 }
 
-function local_moofactory_check_availability($info, $userid, $typeinfo){
+function local_moofactory_check_availability($info, $userid,$modulecheckdateavailabilityvalue,$modulecheckgroupavailabilityvalue){
     $avalaible=true;
     $tree = $info->get_availability_tree();
     list($innernot, $andoperator) = $tree->get_logic_flags(false);
@@ -1379,10 +1379,6 @@ function local_moofactory_check_availability($info, $userid, $typeinfo){
         $childresult = $child->is_available($innernot, $info, true, $userid);
         $type = preg_replace('~^availability_(.*?)\\\\condition$~', '$1', get_class($child));
 
-        if($typeinfo==='section'){
-            $avalaible &= $childresult;
-            continue;
-        }
         //On ne limite les restrictions que pour les modules
         if ($type != "date" && $type != "group") {
             $avalaible &= $childresult;
