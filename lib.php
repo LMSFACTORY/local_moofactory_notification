@@ -24,7 +24,9 @@
 
 use function PHPSTORM_META\type;
 
-require_once("classes/info_moofactory_notification.php");
+require_once("classes/info_module_moofactory_notification.php");
+require_once("classes/info_section_moofactory_notification.php");
+require_once("classes/tree_moofactory_notification.php");
 require_once($CFG->dirroot . '/course/format/moofactory/lib.php');
 
 function test()
@@ -58,7 +60,7 @@ function local_moofactory_notification_extend_navigation_course($navigation, $co
             $options = implode("\n", $array);
 
             $data = new stdClass();
-            $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "defaultvalue" => $notifdefaultvalue, "checkbydefault" => "0",  "locked" => "0",  "visibility" => "2");
+            $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "defaultvalue" => $notifdefaultvalue, "checkbydefault" => "0", "locked" => "0", "visibility" => "2");
 
             $handler->save_field_configuration($field, $data);
         }
@@ -81,7 +83,7 @@ function local_moofactory_notification_extend_navigation_course($navigation, $co
             $options = implode("\n", $array);
 
             $data = new stdClass();
-            $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "defaultvalue" => $notifdefaultvalue, "checkbydefault" => "0",  "locked" => "0",  "visibility" => "2");
+            $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "defaultvalue" => $notifdefaultvalue, "checkbydefault" => "0", "locked" => "0", "visibility" => "2");
 
             $handler->save_field_configuration($field, $data);
         }
@@ -106,7 +108,7 @@ function local_moofactory_notification_extend_navigation_course($navigation, $co
             $options = implode("\n", $array);
 
             $data = new stdClass();
-            $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "defaultvalue" => $notifdefaultvalue, "checkbydefault" => "0",  "locked" => "0",  "visibility" => "2");
+            $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "defaultvalue" => $notifdefaultvalue, "checkbydefault" => "0", "locked" => "0", "visibility" => "2");
 
             $handler->save_field_configuration($field, $data);
         }
@@ -131,7 +133,7 @@ function local_moofactory_notification_extend_navigation_course($navigation, $co
             $options = implode("\n", $array);
 
             $data = new stdClass();
-            $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "defaultvalue" => $notifdefaultvalue, "checkbydefault" => "0",  "locked" => "0",  "visibility" => "2");
+            $data->configdata = array("required" => "0", "uniquevalues" => "0", "options" => $options, "defaultvalue" => $notifdefaultvalue, "checkbydefault" => "0", "locked" => "0", "visibility" => "2");
 
             $handler->save_field_configuration($field, $data);
         }
@@ -380,6 +382,7 @@ function local_moofactory_notification_user_enrolment_updated($event): bool
     }
     return true;
 }
+
 function local_moofactory_notification_user_enrolment_deleted($event): bool
 {
     global $DB;
@@ -491,7 +494,7 @@ function local_moofactory_notification_send_siteevents_notification()
             // Délai pour l'envoi des notifications
             $daysvalue = get_config('local_moofactory_notification', 'daysbeforesiteevent');
             $hoursvalue = get_config('local_moofactory_notification', 'hoursbeforesiteevent');
-            $delay = (int)$daysvalue * 60 * 60 * 24 + (int)$hoursvalue * 60 * 60;
+            $delay = (int) $daysvalue * 60 * 60 * 24 + (int) $hoursvalue * 60 * 60;
             if (!empty($delay)) {
                 // Tous les évènements à venir
                 $events = calendar_get_legacy_events($previoussiteeventstasktime + $delay, $time + $delay, false, false, true, true, false);
@@ -730,7 +733,7 @@ function local_moofactory_notification_send_coursesaccess_notification()
                             if ($progress < 100 && !$is_complete) {
                                 // Calcul de l'intervalle
                                 $courseaccesstime = local_moofactory_notification_getCustomfield($courseid, 'courseaccesstime', 'text');
-                                $interval = (int)$courseaccesstime * 60 * 60 * 24; // jours
+                                $interval = (int) $courseaccesstime * 60 * 60 * 24; // jours
                                 // $interval = (int)$courseaccesstime * 60 * 60; // heures pour tests
                                 // $interval = (int)$courseaccesstime * 60; // minutes pour tests
 
@@ -852,18 +855,18 @@ function local_moofactory_notification_get_activities($courseid, $config = null,
                             in_array($module . '-' . $cm->instance, $config->selectactivities))))
             ) {
                 $activities[] = array(
-                    'type'       => $module,
+                    'type' => $module,
                     'modulename' => $modulename,
-                    'id'         => $cm->id,
-                    'instance'   => $cm->instance,
-                    'name'       => format_string($cm->name),
-                    'expected'   => $cm->completionexpected,
-                    'section'    => $cm->sectionnum,
-                    'position'   => array_search($cm->id, $sections[$cm->sectionnum]),
+                    'id' => $cm->id,
+                    'instance' => $cm->instance,
+                    'name' => format_string($cm->name),
+                    'expected' => $cm->completionexpected,
+                    'section' => $cm->sectionnum,
+                    'position' => array_search($cm->id, $sections[$cm->sectionnum]),
                     // 'url'        => method_exists($cm->url, 'out') ? $cm->url->out() : '',
-                    'context'    => $cm->context,
-                    'icon'       => $cm->get_icon_url(),
-                    'available'  => $cm->available,
+                    'context' => $cm->context,
+                    'icon' => $cm->get_icon_url(),
+                    'available' => $cm->available,
                     'deletioninprogress' => $cm->deletioninprogress,
                 );
             }
@@ -890,18 +893,18 @@ function local_moofactory_notification_get_all_activities($courseid, $config = n
         $modulename = get_string('pluginname', $module);
         foreach ($instances as $index => $cm) {
             $activities[] = array(
-                'type'       => $module,
+                'type' => $module,
                 'modulename' => $modulename,
-                'id'         => $cm->id,
-                'instance'   => $cm->instance,
-                'name'       => format_string($cm->name),
-                'expected'   => $cm->completionexpected,
-                'section'    => $cm->sectionnum,
-                'position'   => array_search($cm->id, $sections[$cm->sectionnum]),
+                'id' => $cm->id,
+                'instance' => $cm->instance,
+                'name' => format_string($cm->name),
+                'expected' => $cm->completionexpected,
+                'section' => $cm->sectionnum,
+                'position' => array_search($cm->id, $sections[$cm->sectionnum]),
                 // 'url'        => method_exists($cm->url, 'out') ? $cm->url->out() : '',
-                'context'    => $cm->context,
-                'icon'       => $cm->get_icon_url(),
-                'available'  => $cm->available,
+                'context' => $cm->context,
+                'icon' => $cm->get_icon_url(),
+                'available' => $cm->available,
                 'deletioninprogress' => $cm->deletioninprogress,
             );
         }
@@ -1074,7 +1077,7 @@ function local_moofactory_notification_percentage($activities, $completions, $co
 
     $progressvalue = $completecount == 0 ? 0 : $completecount / $numactivities;
 
-    return (int)round($progressvalue * 100);
+    return (int) round($progressvalue * 100);
 }
 
 function local_moofactory_notification_get_user_enrolments($courseid, $userid)
@@ -1110,7 +1113,6 @@ function local_moofactory_notification_get_user_enrolment_dates($courseid, $user
     return [$timestart, $timeend];
 }
 
-// Evènements de type cours.
 function local_moofactory_notification_send_coursesevents_notification()
 {
     global $CFG, $DB, $SITE;
@@ -1250,7 +1252,7 @@ function local_moofactory_notification_send_coursesevents_notification()
                                 // message
                                 if (!empty($courseevents)) {
                                     // Notification du cours $courseid
-                                    $notifvalue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseeventsnotification', 'select');
+                                    $notifvalue = (int) local_moofactory_notification_getCustomfield($courseid, 'courseeventsnotification', 'select');
                                     if (!empty($notifvalue)) {
                                         $courseeventsnotifications = array_values($courseeventsnotifications);
                                         $notifvalue--;
@@ -1272,7 +1274,7 @@ function local_moofactory_notification_send_coursesevents_notification()
                                 $variables = local_moofactory_notification_fetch_variables($bodyhtml);
 
                                 if (!empty($notif)) {
-                                    foreach ($enrolledusers as $user) {                                        
+                                    foreach ($enrolledusers as $user) {
 
                                         // Vérification de la capacité avant de continuer.
                                         if (!has_capability('local/moofactory_notification:coursesevents', $coursecontext, $user->id)) {
@@ -1287,37 +1289,41 @@ function local_moofactory_notification_send_coursesevents_notification()
                                             $module = $instances[$event->instance];
                                         }
 
-                                        // Vérification section availability 
+                                        // Check section availability.
                                         $sectionavailable = true;
                                         $section = $DB->get_record('course_sections', array('id' => $module->section), '*', IGNORE_MISSING);
-                                        if (!empty($section->availability)) {
+                                        if (!empty($modulecheckavailabilityvalue) && !empty($section->availability)) {
+                                            // Restrictions are taken into account if there are any.
+
+                                            // Get availability information.
                                             $modinfo = get_fast_modinfo($event->courseid, $user->id);
-                                            $section_info = $modinfo->get_section_info((int)$section->section);
-                                            $si = new \core_availability\info_section($section_info);
-                                            $sectionavailable = local_moofactory_check_availability($si, $user->id, $modulecheckdateavailabilityvalue, $modulecheckgroupavailabilityvalue); 
-                                            if(!$sectionavailable){
-                                                mtrace("Utilisateur {$user->id} ignoré : section {$module->section} non disponible.");
-                                                continue;
-                                            }
+                                            $section_info = $modinfo->get_section_info((int) $section->section);
+                                            $si = new \core_availability\info_section_moofactory_notification($section_info);
+                                            $si->set_modinfo($event->courseid, $user->id);
+                                            $sectionavailable = local_moofactory_check_availability($si, $user->id, $modulecheckdateavailabilityvalue, $modulecheckgroupavailabilityvalue);
                                         }
 
-                                        // Vérification module availability
+                                        // Check module availability.
                                         $moduleavailable = true;
                                         if (!empty($modulecheckavailabilityvalue) && !empty($module->availability)) {
-                                            // On tient compte des restrictions s'il y en a.
+                                            // Restrictions are taken into account if there are any.
+
                                             // Get availability information.
-                                            $ci = new \core_availability\info_moofactory_notification($module);
+                                            $ci = new \core_availability\info_module_moofactory_notification($module);
                                             $ci->set_modinfo($event->courseid, $user->id);
                                             $moduleavailable = local_moofactory_check_availability($ci, $user->id, $modulecheckdateavailabilityvalue, $modulecheckgroupavailabilityvalue);
                                         }
 
-                                        // Pas de notification si l'activité est achevée.
+                                        // No notification if the activity is completed.
                                         $result = $DB->get_record('course_modules_completion', array('coursemoduleid' => $moduleid, 'userid' => $user->id), 'completionstate');
-                                        $completionstate = $result->completionstate;
+                                        // $completionstate = $result->completionstate;
+                                        $completionstate = $result ? $result->completionstate : 0;
 
-                                        if (!is_siteadmin($user) && $moduleavailable && !$completionstate) {
-                                            // Pour les activités rendez-vous, on tient compte du user concerné
+                                        if ($moduleavailable && $sectionavailable && $completionstate != COMPLETION_COMPLETE && $completionstate != COMPLETION_COMPLETE_PASS) {
+
+                                            // For scheduled activities, we take into account the user concerned.
                                             if ($targetedevent->modulename != "scheduler" || $targetedevent->userid == $user->id) {
+                                                // Prepare and send the notification.
                                                 $data = new stdClass();
                                                 $data->firstname = $user->firstname;
                                                 $data->lastname = $user->lastname;
@@ -1348,6 +1354,12 @@ function local_moofactory_notification_send_coursesevents_notification()
 
                                                 $ret = local_moofactory_notification_send_email($user, $msg, $courseid, 'coursesevents_notification');
 
+                                                if (!$ret) {
+                                                    mtrace("Failed to send email to {$user->email}");
+                                                } else {
+                                                    mtrace("Email sent successfully to {$user->email}");
+                                                }
+
                                                 $dateEnvoi = date("d/m/Y H:i:s", time());
                                                 mtrace("\n" . 'Envoyé le : ' . $dateEnvoi . ' à ' . $data->firstname . ' ' . $data->lastname . ' - Cours : ' . $data->coursename . ' - Activité : ' . $data->activityname . ' (Evènement le ' . $data->eventdate . ")");
                                                 mtrace('Objet du mail : ' . $msg->subject);
@@ -1368,37 +1380,16 @@ function local_moofactory_notification_send_coursesevents_notification()
     mtrace("\n" . $nbnotif . ' notification(s) envoyée(s).' . "\n");
 }
 
-function local_moofactory_check_availability($info, $userid,$modulecheckdateavailabilityvalue,$modulecheckgroupavailabilityvalue){
-    $avalaible=true;
+function local_moofactory_check_availability(\core_availability\info $info, int $userid, bool $modulecheckdateavailabilityvalue, bool $modulecheckgroupavailabilityvalue)
+{
+    // Get the availability tree for this info (section or module)
     $tree = $info->get_availability_tree();
-    list($innernot, $andoperator) = $tree->get_logic_flags(false);
-    $children = $tree->get_all_children('core_availability\condition');
+    // Check if this info is available.
+    $isavailable = $tree->check_isavailable(0, $info, true, $userid, $modulecheckdateavailabilityvalue, $modulecheckgroupavailabilityvalue)->is_available();
     
-    // Il faut traiter chaque restriction pour en déduire la disponibilité du module.
-    foreach ($children as $index => $child) {
-        $childresult = $child->is_available($innernot, $info, true, $userid);
-        $type = preg_replace('~^availability_(.*?)\\\\condition$~', '$1', get_class($child));
-
-        //On ne limite les restrictions que pour les modules
-        if ($type != "date" && $type != "group") {
-            $avalaible &= $childresult;
-        } elseif ($type == "date") {
-            if (!empty($modulecheckdateavailabilityvalue)) {
-                $avalaible &= true;
-            } else {
-                $avalaible &= $childresult;
-            }
-        } elseif ($type == "group") {
-            if (!empty($modulecheckgroupavailabilityvalue)) {
-                $avalaible &= true;
-            } else {
-                $avalaible &= $childresult;
-            }
-        }
-    }
-
-    return $avalaible;
+    return $isavailable;
 }
+
 function local_moofactory_notification_getCustomfield($courseid, $name, $type)
 {
     global $DB;
@@ -1534,7 +1525,7 @@ function local_moofactory_notification_prepare_access_email($user, $courseid, $c
 {
     global $DB, $CFG, $SITE;
 
-    $notifvalue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseaccessnotification', 'select');
+    $notifvalue = (int) local_moofactory_notification_getCustomfield($courseid, 'courseaccessnotification', 'select');
     if (!empty($notifvalue)) {
         $courseaccessnotifications = array_values($courseaccessnotifications);
         $notifvalue--;
@@ -1566,7 +1557,7 @@ function local_moofactory_notification_prepare_access_email($user, $courseid, $c
         $data->activityname = "";
         $data->lmsurl = $CFG->wwwroot;
         $data->lmsname = $SITE->fullname;
-        if ((int)$courseaccesstime < 2) {
+        if ((int) $courseaccesstime < 2) {
             $data->interval = $courseaccesstime . " jour";
         } else {
             $data->interval = $courseaccesstime . " jours";
@@ -1590,8 +1581,8 @@ function local_moofactory_notification_prepare_enrollments_email($user, $coursei
     global $DB, $CFG, $SITE;
 
     // Récupération des champs personnalisés pour le cours
-    $defaultNotificationValue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseenrollmentsnotification', 'select');
-    $roleSpecificNotificationValue = (int)local_moofactory_notification_getCustomfield($courseid, 'courseenrollmentsnotification2', 'select');
+    $defaultNotificationValue = (int) local_moofactory_notification_getCustomfield($courseid, 'courseenrollmentsnotification', 'select');
+    $roleSpecificNotificationValue = (int) local_moofactory_notification_getCustomfield($courseid, 'courseenrollmentsnotification2', 'select');
     $roleToMatch = local_moofactory_notification_getCustomfield($courseid, 'courseenrollmentsrole', 'select');
 
     // Détermination de la notification à utiliser
@@ -1682,7 +1673,7 @@ function local_moofactory_notification_send_email_with_cc($user, $msg)
     if (!empty($msg->cc)) {
         foreach ($msg->cc as $ccEmail) {
             // Création d'un utilisateur factice pour l'email en copie
-            $ccUser = (object)[
+            $ccUser = (object) [
                 'email' => $ccEmail,
                 'id' => -99, // ID factice pour les utilisateurs non-enregistrés
                 'firstname' => 'Copie',
@@ -1692,7 +1683,7 @@ function local_moofactory_notification_send_email_with_cc($user, $msg)
             email_to_user(
                 $ccUser,
                 core_user::get_noreply_user(),
-                "[COPIE MAIL] [USER] [" . $user->username . "] " .  $msg->subject,
+                "[COPIE MAIL] [USER] [" . $user->username . "] " . $msg->subject,
                 "[COPIE MAIL] [USER] [" . $user->username . "]\n\n" . $bodytext,
                 $msg->bodyhtml
             );
@@ -1702,35 +1693,56 @@ function local_moofactory_notification_send_email_with_cc($user, $msg)
     return $success;
 }
 
+/**
+ * Send an email to a user using Moodle's messaging framework.
+ * This function is a wrapper around the core Moodle email functions.
+ * 
+ * @param object $user The user object containing the recipient's information.
+ * @param object $msg The message object containing the email content.
+ * @param int $courseid The course ID for the context of the message.
+ * @param string $name The name of the message type.
+ * @return int|bool The message ID if successful, false otherwise.
+ * @throws moodle_exception If the user has no valid email.
+ */
 function local_moofactory_notification_send_email($user, $msg, $courseid, $name)
 {
-    if (!isset($user->email) && empty($user->email)) {
+    global $CFG;
+    require_once($CFG->libdir . '/moodlelib.php');
+
+    // If the user has no valid email, abort early.
+    if (empty($user->email)) {
         return false;
     }
 
+    // Build the Moodle message object for the messaging subsystem.
     $message = new \core\message\message();
-    $message->courseid  = empty($courseid) ? SITEID : $courseid; // This is required in recent versions, use it from 3.2 on https://tracker.moodle.org/browse/MDL-47162
-    $message->component = 'local_moofactory_notification';
-    $message->name = $name;
-    $message->userfrom = core_user::get_noreply_user();
-    $message->userto = $user;
+    $message->courseid = empty($courseid) ? SITEID : $courseid;
+    $message->component = 'local_moofactory_notification';  // Must match your plugin's component.
+    $message->name = $name;                            // E.g., 'coursesevents_notification'.
+    $message->userfrom = core_user::get_noreply_user();    // "From" no-reply
+    $message->userto = $user;                            // "To" recipient
     $message->subject = $msg->subject;
-    $message->fullmessage = $msg->bodytext;
+
+    // Ensure plain text fallback. If $msg->bodytext is missing, generate it from $msg->bodyhtml.
+    $bodytext = !empty($msg->bodytext)
+        ? $msg->bodytext
+        : trim(html_to_text($msg->bodyhtml));
+
+    $message->fullmessage = $bodytext;     // Plain text
     $message->fullmessagehtml = $msg->bodyhtml;
-    // With FORMAT_HTML, most outputs will use fullmessagehtml, and convert it to plain text if necessary.
-    // but some output plugins will behave differently (airnotifier only uses fullmessage)
     $message->fullmessageformat = FORMAT_HTML;
-    // If smallmessage is not empty,
-    // it will have priority over the 2 other fields, with a hard coded FORMAT_PLAIN.
-    // But some output plugins may need it, as jabber currently does.
-    $message->smallmessage = '';
-    $message->notification = '1';
+    $message->smallmessage = '';            // If non-empty, overrides the above fields.
+    $message->notification = 1;             // Mark as a notification.
+
+    // Optionally add context/course URL if we have a course ID.
     if (!empty($courseid)) {
-        $message->contexturl = new moodle_url('/course/view.php', array('id' => $courseid));
+        $message->contexturl = new moodle_url('/course/view.php', ['id' => $courseid]);
         $message->contexturlname = 'Your course';
     }
 
+    // 1) Send the message through Moodle's messaging framework.
     $messageid = message_send($message);
+
     return $messageid;
 }
 
@@ -1746,7 +1758,7 @@ function local_moofactory_notification_get_delays($type, $courseid, $moduleid = 
             $value = get_config('local_moofactory_notification', $configvarid);
         }
 
-        $idrappel = (int)substr($configvar, -1);
+        $idrappel = (int) substr($configvar, -1);
         switch ($idrappel) {
             case 1:
                 if (strpos($configvar, 'days') !== false) {
@@ -1777,7 +1789,7 @@ function local_moofactory_notification_get_delays($type, $courseid, $moduleid = 
 
     $delays = array();
     if (!($daysvalue1 == "") || !($hoursvalue1 == "")) {
-        $delay1 = (int)$daysvalue1 * 60 * 60 * 24 + (int)$hoursvalue1 * 60 * 60;
+        $delay1 = (int) $daysvalue1 * 60 * 60 * 24 + (int) $hoursvalue1 * 60 * 60;
         if ($configvarstarget == 'levee') {
             $delays['first'] = $delay1;
         } else {
@@ -1785,7 +1797,7 @@ function local_moofactory_notification_get_delays($type, $courseid, $moduleid = 
         }
     }
     if (!($daysvalue2 == "") || !($hoursvalue2 == "")) {
-        $delay2 = (int)$daysvalue2 * 60 * 60 * 24 + (int)$hoursvalue2 * 60 * 60;
+        $delay2 = (int) $daysvalue2 * 60 * 60 * 24 + (int) $hoursvalue2 * 60 * 60;
         if ($configvarstarget == 'levee') {
             $delays['second'] = $delay2;
         } else {
@@ -1793,7 +1805,7 @@ function local_moofactory_notification_get_delays($type, $courseid, $moduleid = 
         }
     }
     if (!($daysvalue3 == "") || !($hoursvalue3 == "")) {
-        $delay3 = (int)$daysvalue3 * 60 * 60 * 24 + (int)$hoursvalue3 * 60 * 60;
+        $delay3 = (int) $daysvalue3 * 60 * 60 * 24 + (int) $hoursvalue3 * 60 * 60;
         if ($configvarstarget == 'levee') {
             $delays['third'] = $delay3;
         } else {
@@ -1980,7 +1992,6 @@ function local_moofactory_notification_send_modulesaccess_notification()
     }
     mtrace("\n" . $nbnotif . ' notification(s) envoyée(s).' . "\n");
 }
-
 
 function local_moofactory_notification_prepare_levee_email($user, $courseid, $leveenotifications, $cm)
 {
