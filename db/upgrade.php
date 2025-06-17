@@ -32,7 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  */
 function xmldb_local_moofactory_notification_upgrade($oldversion) {
     global $CFG, $DB;
-    require_login();
+    // require_login();
 
     $dbman = $DB->get_manager();
 

@@ -101,7 +101,7 @@ function xmldb_local_moofactory_notification_install()
 
 
     // Création des champs personnalisés de cours dans la catégorie 'Notifications'.
-    require_login();
+    // require_login();
 
     $handler = core_course\customfield\course_handler::create();
     $categoryid = $handler->create_category(get_string('notifications_category', 'local_moofactory_notification'));
